@@ -375,26 +375,28 @@ body {
 }
 
 /* ─── Input Bar ─────────────────────────────────────────────────── */
-/* ─── Workout-ready banner in Train tab ─────────────────────────── */
-.workout-ready-banner {
+/* ─── Inline workout in Train tab ───────────────────────────────── */
+.workout-inline-wrap {
+  border-bottom: 1px solid #F1F5F9;
+}
+.workout-inline-toggle {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 16px 8px;
-  padding: 10px 14px;
+  width: 100%;
+  padding: 10px 16px;
   background: var(--wh-primary-light);
-  border: 1.5px solid var(--wh-primary);
-  border-radius: 10px;
+  border: none;
+  border-bottom: 1px solid #ffd6e2;
   color: var(--wh-primary-dark);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  width: calc(100% - 32px);
   text-align: left;
 }
-.workout-ready-banner svg:last-child { margin-left: auto; }
-.workout-ready-banner:hover { background: #ffd6e2; }
+.workout-inline-toggle svg:last-child { margin-left: auto; }
+.workout-inline-toggle:hover { background: #ffd6e2; }
 
 .input-bar {
   position: sticky;
