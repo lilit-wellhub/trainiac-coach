@@ -14,6 +14,7 @@ import { saveWorkout, saveActivity, getHistory, getSessionStats, getWorkoutToday
 import { saveProfile, loadProfile, clearProfile } from './memberProfile.js'
 import { saveProgram, loadProgram } from './programStorage.js'
 import { buildSystemPrompt } from './buildSystemPrompt.js'
+import WelcomeScreen from './components/WelcomeScreen.jsx'
 
 function makeInitialMessage(existingProfile, todayWorkout) {
   if (existingProfile) {
@@ -35,7 +36,7 @@ function makeInitialMessage(existingProfile, todayWorkout) {
   }
   return {
     role: 'coach',
-    content: "Hey — I'm your Trainiac Coach. Before we build your plan, what should I call you?",
+    content: "Hey! I'm your Trainiac AI Coach — I'll build a personalised training plan around your goals, schedule and any physical constraints, then adapt it week by week.\n\nThis will take about 2 minutes. Let's start with the basics: what should I call you?",
     timestamp: Date.now()
   }
 }
@@ -78,6 +79,7 @@ export default function App() {
   const todayWorkout = getWorkoutToday()
   const systemPrompt = buildSystemPrompt(existingProfile, recentHistory, todayWorkout)
 
+  const [showWelcome, setShowWelcome] = useState(!existingProfile)
   const [messages, setMessages] = useState([makeInitialMessage(existingProfile, todayWorkout)])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -416,6 +418,10 @@ export default function App() {
       </svg>
     )},
   ]
+
+  if (showWelcome) {
+    return <WelcomeScreen onGetStarted={() => setShowWelcome(false)} />
+  }
 
   return (
     <div className="app">
