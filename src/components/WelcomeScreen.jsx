@@ -1,56 +1,13 @@
 import { useState } from 'react'
 
-// Wellhub-style wellness illustration — person in a runner's stretch pose
-function WellnessIllustration() {
+// Illustration slot — replace src with a real Wellhub export from Figma
+// e.g. <IllustrationSlot src="/illustrations/wellness-hero.png" />
+function IllustrationSlot({ src }) {
+  if (!src) return null
   return (
-    <svg viewBox="0 0 320 260" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      {/* Background blobs */}
-      <ellipse cx="160" cy="200" rx="130" ry="50" fill="#F2496B" fillOpacity="0.10" />
-      <ellipse cx="240" cy="80" rx="60" ry="60" fill="#A880FF" fillOpacity="0.15" />
-      <ellipse cx="60" cy="100" rx="45" ry="45" fill="#F2496B" fillOpacity="0.12" />
-
-      {/* Floor / mat */}
-      <rect x="40" y="210" width="240" height="8" rx="4" fill="#F2496B" fillOpacity="0.18" />
-
-      {/* Body — torso */}
-      <rect x="138" y="110" width="40" height="56" rx="20" fill="#1B1340" />
-
-      {/* Head */}
-      <circle cx="158" cy="88" r="24" fill="#F2496B" />
-      {/* Hair */}
-      <ellipse cx="158" cy="70" rx="18" ry="12" fill="#1B1340" />
-      {/* Face – smile */}
-      <path d="M150 92 Q158 100 166 92" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-      {/* Eyes */}
-      <circle cx="152" cy="87" r="2.5" fill="white" />
-      <circle cx="164" cy="87" r="2.5" fill="white" />
-
-      {/* Left arm — raised */}
-      <path d="M138 128 Q110 100 96 80" stroke="#1B1340" strokeWidth="12" strokeLinecap="round" fill="none" />
-      {/* Dumbbell */}
-      <rect x="82" y="73" width="28" height="8" rx="4" fill="#F2496B" />
-      <rect x="78" y="68" width="8" height="18" rx="4" fill="#1B1340" />
-      <rect x="106" y="68" width="8" height="18" rx="4" fill="#1B1340" />
-
-      {/* Right arm — down/side */}
-      <path d="M178 128 Q200 148 205 165" stroke="#1B1340" strokeWidth="12" strokeLinecap="round" fill="none" />
-
-      {/* Left leg — lunging forward */}
-      <path d="M148 166 Q130 185 110 210" stroke="#1B1340" strokeWidth="13" strokeLinecap="round" fill="none" />
-      {/* Left shoe */}
-      <ellipse cx="106" cy="212" rx="18" ry="8" fill="#F2496B" />
-
-      {/* Right leg — back/extended */}
-      <path d="M168 166 Q185 185 210 210" stroke="#1B1340" strokeWidth="13" strokeLinecap="round" fill="none" />
-      {/* Right shoe */}
-      <ellipse cx="212" cy="212" rx="18" ry="8" fill="#1B1340" />
-
-      {/* Sparkle accents */}
-      <path d="M260 50 L263 44 L266 50 L272 53 L266 56 L263 62 L260 56 L254 53 Z" fill="#F2496B" fillOpacity="0.7" />
-      <path d="M50 160 L52 156 L54 160 L58 162 L54 164 L52 168 L50 164 L46 162 Z" fill="#A880FF" fillOpacity="0.6" />
-      <circle cx="285" cy="140" r="5" fill="#F2496B" fillOpacity="0.4" />
-      <circle cx="35" cy="55" r="4" fill="#A880FF" fillOpacity="0.5" />
-    </svg>
+    <div style={{ margin: '0 auto 28px', width: 280, maxWidth: '100%' }}>
+      <img src={src} alt="" aria-hidden="true" style={{ width: '100%' }} />
+    </div>
   )
 }
 
@@ -119,10 +76,8 @@ export default function WelcomeScreen({ onGetStarted }) {
               </div>
             </div>
 
-            {/* Illustration */}
-            <div style={{ margin: '0 auto 28px', width: 280, maxWidth: '100%' }}>
-              <WellnessIllustration />
-            </div>
+            {/* Illustration slot — add a real Wellhub export here */}
+            {/* <IllustrationSlot src="/illustrations/hero.png" /> */}
 
             {/* Headline */}
             <h1 style={{
