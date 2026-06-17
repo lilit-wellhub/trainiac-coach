@@ -1,7 +1,67 @@
-import React from 'react'
+import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './App.css'
+
+const SITE_PASSWORD = import.meta.env.VITE_SITE_PASSWORD
+
+function PasswordGate({ children }) {
+  const [unlocked, setUnlocked] = useState(
+    !SITE_PASSWORD || sessionStorage.getItem('trainiac_auth') === 'ok'
+  )
+  const [input, setInput] = useState('')
+  const [error, setError] = useState(false)
+
+  if (unlocked) return children
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (input === SITE_PASSWORD) {
+      sessionStorage.setItem('trainiac_auth', 'ok')
+      setUnlocked(true)
+    } else {
+      setError(true)
+      setInput('')
+    }
+  }
+
+  return (
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: '#1B1340', fontFamily: 'system-ui, sans-serif',
+    }}>
+      <div style={{
+        background: '#fff', borderRadius: 16, padding: '40px 36px', width: 320,
+        textAlign: 'center', boxShadow: '0 8px 40px rgba(0,0,0,0.3)',
+      }}>
+        <img src="/logo.png" alt="Trainiac" style={{ width: 48, marginBottom: 16 }} />
+        <h2 style={{ margin: '0 0 6px', fontSize: 20, color: '#1B1340' }}>Trainiac AI Coach</h2>
+        <p style={{ margin: '0 0 24px', fontSize: 14, color: '#6B7280' }}>Enter the access password to continue</p>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            value={input}
+            onChange={e => { setInput(e.target.value); setError(false) }}
+            placeholder="Password"
+            autoFocus
+            style={{
+              width: '100%', padding: '10px 14px', borderRadius: 8, fontSize: 15,
+              border: error ? '1.5px solid #F2496B' : '1.5px solid #E0E0E0',
+              outline: 'none', boxSizing: 'border-box', marginBottom: 8,
+            }}
+          />
+          {error && <p style={{ color: '#F2496B', fontSize: 13, margin: '0 0 8px' }}>Incorrect password</p>}
+          <button type="submit" style={{
+            width: '100%', padding: '11px', borderRadius: 8, background: '#F2496B',
+            color: '#fff', fontWeight: 700, fontSize: 15, border: 'none', cursor: 'pointer', marginTop: 4,
+          }}>
+            Enter
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null } }
@@ -23,7 +83,9 @@ class ErrorBoundary extends React.Component {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <App />
+      <PasswordGate>
+        <App />
+      </PasswordGate>
     </ErrorBoundary>
   </React.StrictMode>
 )
