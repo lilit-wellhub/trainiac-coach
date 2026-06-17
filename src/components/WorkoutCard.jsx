@@ -70,6 +70,7 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
   const [skipped, setSkipped]   = useState({})
   const [expanded, setExpanded] = useState({})
   const [restLabel, setRestLabel] = useState('')
+  const completedRef = useRef(false)  // guard: onComplete fires only once per session
 
   const rest = useRestTimer(() => setRestLabel(''))
 
@@ -78,6 +79,7 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
     setStarted(false); setReordering(false)
     setSetsDone({}); setSkipped({})
     setExpanded({}); setActiveGif(null)
+    completedRef.current = false  // reset for new exercise set
   }, [initialExercises])
 
   // ── Derived state (computed before hooks so the effect below can use them) ──
@@ -92,8 +94,8 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
 
   // ── ALL hooks must come before any conditional return ─────────────
   useEffect(() => {
-    if (allSettled && started) {
-      // Recompute fresh inside effect to avoid stale closure
+    if (allSettled && started && !completedRef.current) {
+      completedRef.current = true  // prevent double-fire if user unchecks/rechecks a set
       const exStatuses = exercises.map(ex => ({
         name: ex.name,
         status: skipped[ex.name] ? 'skipped' : 'done',

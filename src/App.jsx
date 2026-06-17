@@ -474,6 +474,14 @@ export default function App() {
                   })
                   const stats = getSessionStats()
                   setSessionData(prev => ({ ...prev, sessionsCompleted: stats.totalSessions, streakWeeks: stats.streakWeeks }))
+                  // Trigger coach post-workout message
+                  const mins = summary.durationSeconds ? Math.round(summary.durationSeconds / 60) : null
+                  const doneCount = summary.doneCount || 0
+                  const skipCount = summary.skippedCount || 0
+                  const hiddenTrigger = `__workout_complete__|done=${doneCount}|skipped=${skipCount}${mins ? `|mins=${mins}` : ''}`
+                  setTimeout(() => {
+                    sendMessageWithText(hiddenTrigger, messages)
+                  }, 800)
                 }}
               />
               <InputBar value={input} onChange={setInput} onSend={sendMessage} disabled={loading} />

@@ -1775,22 +1775,24 @@ body {
 }
 
 .pill {
-  background: var(--wh-primary-light);
-  color: var(--wh-primary-dark);
-  border: 1.5px solid var(--wh-primary);
+  background: transparent;
+  color: var(--wh-text);
+  border: 1px solid var(--wh-grey-border);
   border-radius: 20px;
-  padding: 7px 16px;
+  padding: 6px 14px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, border-color 0.15s;
   font-family: inherit;
+  opacity: 0.85;
 }
 
 .pill:hover,
 .pill:active {
-  background: var(--wh-primary);
-  color: #fff;
+  background: var(--wh-grey);
+  border-color: #ccc;
+  opacity: 1;
 }
 
 .exercise-video-btn.active {
