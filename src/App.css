@@ -375,6 +375,27 @@ body {
 }
 
 /* ─── Input Bar ─────────────────────────────────────────────────── */
+/* ─── Workout-ready banner in Train tab ─────────────────────────── */
+.workout-ready-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 8px;
+  padding: 10px 14px;
+  background: var(--wh-primary-light);
+  border: 1.5px solid var(--wh-primary);
+  border-radius: 10px;
+  color: var(--wh-primary-dark);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  width: calc(100% - 32px);
+  text-align: left;
+}
+.workout-ready-banner svg:last-child { margin-left: auto; }
+.workout-ready-banner:hover { background: #ffd6e2; }
+
 .input-bar {
   position: sticky;
   bottom: 0;

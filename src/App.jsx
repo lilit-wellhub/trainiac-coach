@@ -269,6 +269,7 @@ export default function App() {
       if (planReady) {
         setShowWorkoutCard(true)
         setExercises(parsedExercises)
+        setActiveTab('progress')  // switch to Progress tab so workout is front and centre
         // Store today's exercises in the program so Progress tab can show them
         const todayDayName = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()]
         const existingProgram = loadProgram()
@@ -460,6 +461,23 @@ export default function App() {
                     : <QuickReplies messages={messages} phase={phase} loading={loading} onSelect={(r) => sendMessageWithText(r, messages)} />
                 }
               />
+              {showWorkoutCard && (
+                <button
+                  className="workout-ready-banner"
+                  onClick={() => setActiveTab('progress')}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L4.09 12.96a.5.5 0 0 0 .41.79H11l-1 9 8.91-10.96a.5.5 0 0 0-.41-.79H13l1-9z"/></svg>
+                  Today's session is ready — tap to start
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              )}
+              <InputBar value={input} onChange={setInput} onSend={sendMessage} disabled={loading} />
+            </>
+          )}
+
+          {/* Progress tab — active workout + weekly program + history */}
+          {activeTab === 'progress' && (
+            <div className="tab-view">
               <WorkoutCard
                 visible={showWorkoutCard}
                 memberName={sessionData.memberName}
@@ -474,23 +492,16 @@ export default function App() {
                   })
                   const stats = getSessionStats()
                   setSessionData(prev => ({ ...prev, sessionsCompleted: stats.totalSessions, streakWeeks: stats.streakWeeks }))
-                  // Trigger coach post-workout message
                   const mins = summary.durationSeconds ? Math.round(summary.durationSeconds / 60) : null
                   const doneCount = summary.doneCount || 0
                   const skipCount = summary.skippedCount || 0
                   const hiddenTrigger = `__workout_complete__|done=${doneCount}|skipped=${skipCount}${mins ? `|mins=${mins}` : ''}`
                   setTimeout(() => {
-                    sendMessageWithText(hiddenTrigger, messages)
+                    setActiveTab('train')
+                    setTimeout(() => sendMessageWithText(hiddenTrigger, messages), 200)
                   }, 800)
                 }}
               />
-              <InputBar value={input} onChange={setInput} onSend={sendMessage} disabled={loading} />
-            </>
-          )}
-
-          {/* Progress tab — weekly program + history */}
-          {activeTab === 'progress' && (
-            <div className="tab-view">
               <WeekProgram key={programVersion} inline onAskCoach={(msg) => { setActiveTab('train'); setTimeout(() => sendMessageWithText(msg, messages), 100) }} />
               <div className="tab-section-divider" />
               <WorkoutHistory inline />
