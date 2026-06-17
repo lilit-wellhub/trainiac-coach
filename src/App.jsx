@@ -456,45 +456,11 @@ export default function App() {
             <>
               <ProgressCard sessionData={sessionData} visible={phase >= 2} />
               {showWorkoutCard && (
-                <div className="workout-inline-wrap">
-                  <button
-                    className="workout-inline-toggle"
-                    onClick={() => setWorkoutCollapsed(c => !c)}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L4.09 12.96a.5.5 0 0 0 .41.79H11l-1 9 8.91-10.96a.5.5 0 0 0-.41-.79H13l1-9z"/></svg>
-                    Today's workout
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      {workoutCollapsed
-                        ? <polyline points="6 9 12 15 18 9"/>
-                        : <polyline points="18 15 12 9 6 15"/>}
-                    </svg>
-                  </button>
-                  {!workoutCollapsed && (
-                    <WorkoutCard
-                      visible={showWorkoutCard}
-                      memberName={sessionData.memberName}
-                      exercises={exercises}
-                      onComplete={(summary) => {
-                        saveWorkout({
-                          memberName: sessionData.memberName,
-                          exercises: summary.exercises,
-                          durationSeconds: summary.durationSeconds,
-                          doneCount: summary.doneCount,
-                          skippedCount: summary.skippedCount,
-                        })
-                        setHistoryVersion(v => v + 1)
-                        const stats = getSessionStats()
-                        setSessionData(prev => ({ ...prev, sessionsCompleted: stats.totalSessions, streakWeeks: stats.streakWeeks }))
-                        setWorkoutCollapsed(true)
-                        const mins = summary.durationSeconds ? Math.round(summary.durationSeconds / 60) : null
-                        const doneCount = summary.doneCount || 0
-                        const skipCount = summary.skippedCount || 0
-                        const hiddenTrigger = `__workout_complete__|done=${doneCount}|skipped=${skipCount}${mins ? `|mins=${mins}` : ''}`
-                        setTimeout(() => sendMessageWithText(hiddenTrigger, messages), 800)
-                      }}
-                    />
-                  )}
-                </div>
+                <button className="workout-link-chip" onClick={() => setActiveTab('progress')}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L4.09 12.96a.5.5 0 0 0 .41.79H11l-1 9 8.91-10.96a.5.5 0 0 0-.41-.79H13l1-9z"/></svg>
+                  View today's workout
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
               )}
               <ChatWindow
                 messages={messages}
@@ -509,9 +475,34 @@ export default function App() {
             </>
           )}
 
-          {/* Progress tab — weekly program + history */}
+          {/* Progress tab — active workout + weekly program + history */}
           {activeTab === 'progress' && (
             <div className="tab-view">
+              <WorkoutCard
+                visible={showWorkoutCard}
+                memberName={sessionData.memberName}
+                exercises={exercises}
+                onComplete={(summary) => {
+                  saveWorkout({
+                    memberName: sessionData.memberName,
+                    exercises: summary.exercises,
+                    durationSeconds: summary.durationSeconds,
+                    doneCount: summary.doneCount,
+                    skippedCount: summary.skippedCount,
+                  })
+                  setHistoryVersion(v => v + 1)
+                  const stats = getSessionStats()
+                  setSessionData(prev => ({ ...prev, sessionsCompleted: stats.totalSessions, streakWeeks: stats.streakWeeks }))
+                  const mins = summary.durationSeconds ? Math.round(summary.durationSeconds / 60) : null
+                  const doneCount = summary.doneCount || 0
+                  const skipCount = summary.skippedCount || 0
+                  const hiddenTrigger = `__workout_complete__|done=${doneCount}|skipped=${skipCount}${mins ? `|mins=${mins}` : ''}`
+                  setTimeout(() => {
+                    setActiveTab('train')
+                    setTimeout(() => sendMessageWithText(hiddenTrigger, messages), 200)
+                  }, 800)
+                }}
+              />
               <WeekProgram key={programVersion} inline onAskCoach={(msg) => { setActiveTab('train'); setTimeout(() => sendMessageWithText(msg, messages), 100) }} />
               <div className="tab-section-divider" />
               <WorkoutHistory key={historyVersion} inline />
