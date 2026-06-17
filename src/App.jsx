@@ -93,6 +93,7 @@ export default function App() {
   const [sessionData, setSessionData] = useState(makeInitialSessionData(existingProfile))
   const [activeTab, setActiveTab] = useState('train')
   const [programVersion, setProgramVersion] = useState(0)
+  const [historyVersion, setHistoryVersion] = useState(0)
   const autoTriggered = useRef(false)
 
   // Auto-trigger plan generation for returning members — no dead wait state
@@ -146,6 +147,7 @@ export default function App() {
       while ((logMatch = logActivityRegex.exec(responseText)) !== null) {
         const parts = logMatch[1].split('|')
         saveActivity({ name: parts[0]?.trim(), date: parts[1]?.trim(), durationMin: parts[2] ? parseInt(parts[2]) : null })
+        setHistoryVersion(v => v + 1)
       }
       responseText = responseText.replace(/\[LOG_ACTIVITY:[^\]]+\]/g, '').trim()
 
@@ -490,6 +492,7 @@ export default function App() {
                     doneCount: summary.doneCount,
                     skippedCount: summary.skippedCount,
                   })
+                  setHistoryVersion(v => v + 1)
                   const stats = getSessionStats()
                   setSessionData(prev => ({ ...prev, sessionsCompleted: stats.totalSessions, streakWeeks: stats.streakWeeks }))
                   const mins = summary.durationSeconds ? Math.round(summary.durationSeconds / 60) : null
@@ -504,7 +507,7 @@ export default function App() {
               />
               <WeekProgram key={programVersion} inline onAskCoach={(msg) => { setActiveTab('train'); setTimeout(() => sendMessageWithText(msg, messages), 100) }} />
               <div className="tab-section-divider" />
-              <WorkoutHistory inline />
+              <WorkoutHistory key={historyVersion} inline />
             </div>
           )}
 
