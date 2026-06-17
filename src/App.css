@@ -566,6 +566,22 @@ body {
   transition: color 0.15s;
 }
 
+.bottom-tab-icon-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.tab-badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--wh-primary);
+  border: 2px solid #fff;
+}
+
 /* ─── Tab views ─────────────────────────────────────────────────── */
 .tab-view {
   flex: 1;

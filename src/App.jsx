@@ -455,13 +455,6 @@ export default function App() {
           {activeTab === 'train' && (
             <>
               <ProgressCard sessionData={sessionData} visible={phase >= 2} />
-              {showWorkoutCard && (
-                <button className="workout-link-chip" onClick={() => setActiveTab('progress')}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L4.09 12.96a.5.5 0 0 0 .41.79H11l-1 9 8.91-10.96a.5.5 0 0 0-.41-.79H13l1-9z"/></svg>
-                  View today's workout
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
-              )}
               <ChatWindow
                 messages={messages}
                 loading={loading}
@@ -543,7 +536,10 @@ export default function App() {
             className={`bottom-tab ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
           >
-            {tab.icon}
+            <span className="bottom-tab-icon-wrap">
+              {tab.icon}
+              {tab.id === 'progress' && showWorkoutCard && <span className="tab-badge" />}
+            </span>
             <span>{tab.label}</span>
           </button>
         ))}
