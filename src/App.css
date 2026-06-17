@@ -566,6 +566,24 @@ body {
   transition: color 0.15s;
 }
 
+/* ─── Workout link chip in chat ─────────────────────────────────── */
+.workout-link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 16px 8px;
+  padding: 8px 14px;
+  background: var(--wh-primary);
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.workout-link-chip:hover { background: #e03560; }
+
 .bottom-tab-icon-wrap {
   position: relative;
   display: inline-flex;

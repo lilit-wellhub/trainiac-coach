@@ -464,6 +464,13 @@ export default function App() {
                     : <QuickReplies messages={messages} phase={phase} loading={loading} onSelect={(r) => sendMessageWithText(r, messages)} />
                 }
               />
+              {showWorkoutCard && (
+                <button className="workout-link-chip" onClick={() => setActiveTab('progress')}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L4.09 12.96a.5.5 0 0 0 .41.79H11l-1 9 8.91-10.96a.5.5 0 0 0-.41-.79H13l1-9z"/></svg>
+                  Start today's workout
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              )}
               <InputBar value={input} onChange={setInput} onSend={sendMessage} disabled={loading} />
             </>
           )}
