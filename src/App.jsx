@@ -420,7 +420,11 @@ export default function App() {
     )},
     { id: 'progress', label: 'Train', icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M6 8h12M6 16h12"/><rect x="2" y="6" width="4" height="4" rx="1"/><rect x="2" y="14" width="4" height="4" rx="1"/><rect x="18" y="6" width="4" height="4" rx="1"/><rect x="18" y="14" width="4" height="4" rx="1"/>
+        <line x1="6" y1="12" x2="18" y2="12"/>
+        <line x1="3" y1="9" x2="3" y2="15"/>
+        <line x1="21" y1="9" x2="21" y2="15"/>
+        <line x1="6" y1="8" x2="6" y2="16"/>
+        <line x1="18" y1="8" x2="18" y2="16"/>
       </svg>
     )},
     { id: 'me', label: 'Me', icon: (
