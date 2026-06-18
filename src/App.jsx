@@ -114,7 +114,7 @@ export default function App() {
   const sendMessageWithText = useCallback(async (text, currentMessages) => {
     if (!text || loading) return
 
-    const isHiddenTrigger = text.startsWith('__') && text.endsWith('__')
+    const isHiddenTrigger = text.startsWith('__')
     const userMsg = { role: 'user', content: text, timestamp: Date.now(), hidden: isHiddenTrigger }
     const newMessages = [...currentMessages, userMsg]
     setMessages(newMessages)
@@ -491,6 +491,7 @@ export default function App() {
                     skippedCount: summary.skippedCount,
                   })
                   setHistoryVersion(v => v + 1)
+                  setShowWorkoutCard(false)
                   const stats = getSessionStats()
                   setSessionData(prev => ({ ...prev, sessionsCompleted: stats.totalSessions, streakWeeks: stats.streakWeeks }))
                   const mins = summary.durationSeconds ? Math.round(summary.durationSeconds / 60) : null
