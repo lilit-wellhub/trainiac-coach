@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { getHistory } from '../workoutHistory.js'
-import { CalendarDays, List, Activity, X, Check } from 'lucide-react'
+import { CalendarDays, List, Activity, X, Check, ChevronDown, ChevronUp } from 'lucide-react'
 
 const PAGE_SIZE = 5
 
@@ -23,6 +23,7 @@ function formatDuration(secs) {
 // ── List view ────────────────────────────────────────────────────────
 function ListView({ history }) {
   const [page, setPage] = useState(1)
+  const [expandedId, setExpandedId] = useState(null)
   const visible = history.slice(0, page * PAGE_SIZE)
   const hasMore = visible.length < history.length
 
@@ -37,32 +38,71 @@ function ListView({ history }) {
         const done    = w.doneCount ?? w.exercises?.filter(e => e.status === 'done').length ?? 0
         const total   = w.exercises?.length ?? 0
         const dur     = formatDuration(w.durationSeconds)
+        const isOpen  = expandedId === w.id
+        const canExpand = !isActivity && w.exercises?.length > 0
+
+        const doneExercises    = w.exercises?.filter(e => e.status === 'done') || []
+        const skippedExercises = w.exercises?.filter(e => e.status === 'skipped') || []
+
         return (
-          <div className={`history-item ${isActivity ? 'history-item-activity' : ''}`} key={w.id}>
+          <div
+            className={`history-item ${isActivity ? 'history-item-activity' : ''} ${canExpand ? 'history-item-expandable' : ''}`}
+            key={w.id}
+            onClick={() => canExpand && setExpandedId(isOpen ? null : w.id)}
+          >
             <div className="history-item-header">
               <span className="history-item-date">
-                {isActivity ? <><Activity size={13} style={{display:'inline',verticalAlign:'middle',marginRight:4}} />{w.activityName}</> : formatDate(w.completedAt)}
+                {isActivity
+                  ? <><Activity size={13} style={{display:'inline',verticalAlign:'middle',marginRight:4}} />{w.activityName}</>
+                  : formatDate(w.completedAt)}
               </span>
-              <span className="history-item-time">{formatTime(w.completedAt)}</span>
+              <div className="history-item-header-right">
+                <span className="history-item-time">{formatTime(w.completedAt)}</span>
+                {canExpand && (isOpen
+                  ? <ChevronUp size={13} style={{opacity:0.4}} />
+                  : <ChevronDown size={13} style={{opacity:0.35}} />)}
+              </div>
             </div>
+
             {isActivity ? (
               <div className="history-item-meta">
                 <span className="history-item-summary">{formatDate(w.completedAt)}</span>
                 {dur && <span className="history-item-dur">· {dur}</span>}
               </div>
             ) : (
-              <>
-                <div className="history-item-meta">
-                  <span className="history-item-summary">{done}/{total} exercises done</span>
-                  {dur && <span className="history-item-dur">· {dur}</span>}
-                </div>
-              </>
+              <div className="history-item-meta">
+                <span className="history-item-summary">{done}/{total} exercises done</span>
+                {dur && <span className="history-item-dur">· {dur}</span>}
+              </div>
+            )}
+
+            {isOpen && (
+              <div className="history-item-detail">
+                {doneExercises.length > 0 && (
+                  <div className="history-item-exercises">
+                    {doneExercises.map((ex, i) => (
+                      <span key={i} className="history-exercise-chip done">
+                        <Check size={10} style={{display:'inline',verticalAlign:'middle',marginRight:3}} />
+                        {ex.name}
+                        {ex.sets && ex.reps ? ` · ${ex.sets}×${ex.reps}` : ''}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {skippedExercises.length > 0 && (
+                  <div className="history-item-exercises" style={{marginTop:6}}>
+                    {skippedExercises.map((ex, i) => (
+                      <span key={i} className="history-exercise-chip skipped">{ex.name}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )
       })}
       {hasMore && (
-        <button className="history-load-more" onClick={() => setPage(p => p + 1)}>
+        <button className="history-load-more" onClick={e => { e.stopPropagation(); setPage(p => p + 1) }}>
           Load more ({history.length - visible.length} remaining)
         </button>
       )}

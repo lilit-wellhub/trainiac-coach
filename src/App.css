@@ -1028,16 +1028,40 @@ body {
   text-decoration: line-through;
 }
 
+.history-item-expandable {
+  cursor: pointer;
+}
+.history-item-expandable:hover {
+  border-color: #ddd;
+  background: #fafafa;
+}
+
 .history-item-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.history-item-header-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
 }
 
 .history-item-time {
   font-size: 12px;
   color: var(--wh-grey-text);
+}
+
+.history-item-detail {
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .history-item-meta {
