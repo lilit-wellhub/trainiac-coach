@@ -9,7 +9,8 @@ export function saveWorkout(workout) {
 // Log a non-gym activity (padel, cycling, yoga, etc.)
 export function saveActivity({ name, date, durationMin }) {
   const history = getHistory()
-  const completedAt = date ? new Date(date).toISOString() : new Date().toISOString()
+  // Parse date as local noon to avoid UTC-offset rolling to wrong day
+  const completedAt = date ? new Date(`${date}T12:00:00`).toISOString() : new Date().toISOString()
   history.unshift({
     id: Date.now(),
     type: 'activity',

@@ -20,6 +20,79 @@ function formatDuration(secs) {
   return m < 1 ? '< 1 min' : `${m} min`
 }
 
+// ── Shared item (used by both list and calendar) ─────────────────────
+function HistoryItem({ w, expandedId, setExpandedId }) {
+  const isActivity   = w.type === 'activity'
+  const done         = w.doneCount ?? w.exercises?.filter(e => e.status === 'done').length ?? 0
+  const total        = w.exercises?.length ?? 0
+  const dur          = formatDuration(w.durationSeconds)
+  const isOpen       = expandedId === w.id
+  const canExpand    = !isActivity && w.exercises?.length > 0
+  const doneEx       = w.exercises?.filter(e => e.status === 'done') || []
+  const skippedEx    = w.exercises?.filter(e => e.status === 'skipped') || []
+
+  return (
+    <div
+      className={`history-item ${isActivity ? 'history-item-activity' : ''} ${canExpand ? 'history-item-expandable' : ''}`}
+      onClick={() => canExpand && setExpandedId(isOpen ? null : w.id)}
+    >
+      <div className="history-item-header">
+        <span className="history-item-date">
+          {isActivity
+            ? <><Activity size={13} style={{display:'inline',verticalAlign:'middle',marginRight:4}} />{w.activityName}</>
+            : formatDate(w.completedAt)}
+        </span>
+        <div className="history-item-header-right">
+          <span className="history-item-time">{formatTime(w.completedAt)}</span>
+          {canExpand && (isOpen
+            ? <ChevronUp size={13} style={{opacity:0.4}} />
+            : <ChevronDown size={13} style={{opacity:0.35}} />)}
+        </div>
+      </div>
+
+      <div className="history-item-meta">
+        {isActivity ? (
+          <>
+            <span className="history-item-summary">{formatDate(w.completedAt)}</span>
+            {dur && <span className="history-item-dur">· {dur}</span>}
+          </>
+        ) : (
+          <>
+            <span className="history-item-summary">{done}/{total} exercises done</span>
+            {dur && <span className="history-item-dur">· {dur}</span>}
+          </>
+        )}
+      </div>
+
+      {isOpen && (
+        <div className="history-item-detail">
+          {doneEx.map((ex, i) => (
+            <div key={i} className="history-ex-row">
+              <div className="history-ex-name">
+                <Check size={11} className="history-ex-check" />
+                {ex.name}
+              </div>
+              <div className="history-ex-meta">
+                {ex.sets && ex.reps && <span className="history-ex-tag">{ex.sets}×{ex.reps}</span>}
+                {ex.restSeconds && <span className="history-ex-tag history-ex-rest">{ex.restSeconds}s rest</span>}
+              </div>
+            </div>
+          ))}
+          {skippedEx.map((ex, i) => (
+            <div key={i} className="history-ex-row history-ex-skipped">
+              <div className="history-ex-name">
+                <span className="history-ex-skip-dash">—</span>
+                {ex.name}
+              </div>
+              <span className="history-ex-tag history-ex-skip-label">skipped</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── List view ────────────────────────────────────────────────────────
 function ListView({ history }) {
   const [page, setPage] = useState(1)
@@ -33,77 +106,9 @@ function ListView({ history }) {
 
   return (
     <div className="history-list">
-      {visible.map(w => {
-        const isActivity = w.type === 'activity'
-        const done    = w.doneCount ?? w.exercises?.filter(e => e.status === 'done').length ?? 0
-        const total   = w.exercises?.length ?? 0
-        const dur     = formatDuration(w.durationSeconds)
-        const isOpen  = expandedId === w.id
-        const canExpand = !isActivity && w.exercises?.length > 0
-
-        const doneExercises    = w.exercises?.filter(e => e.status === 'done') || []
-        const skippedExercises = w.exercises?.filter(e => e.status === 'skipped') || []
-
-        return (
-          <div
-            className={`history-item ${isActivity ? 'history-item-activity' : ''} ${canExpand ? 'history-item-expandable' : ''}`}
-            key={w.id}
-            onClick={() => canExpand && setExpandedId(isOpen ? null : w.id)}
-          >
-            <div className="history-item-header">
-              <span className="history-item-date">
-                {isActivity
-                  ? <><Activity size={13} style={{display:'inline',verticalAlign:'middle',marginRight:4}} />{w.activityName}</>
-                  : formatDate(w.completedAt)}
-              </span>
-              <div className="history-item-header-right">
-                <span className="history-item-time">{formatTime(w.completedAt)}</span>
-                {canExpand && (isOpen
-                  ? <ChevronUp size={13} style={{opacity:0.4}} />
-                  : <ChevronDown size={13} style={{opacity:0.35}} />)}
-              </div>
-            </div>
-
-            {isActivity ? (
-              <div className="history-item-meta">
-                <span className="history-item-summary">{formatDate(w.completedAt)}</span>
-                {dur && <span className="history-item-dur">· {dur}</span>}
-              </div>
-            ) : (
-              <div className="history-item-meta">
-                <span className="history-item-summary">{done}/{total} exercises done</span>
-                {dur && <span className="history-item-dur">· {dur}</span>}
-              </div>
-            )}
-
-            {isOpen && (
-              <div className="history-item-detail">
-                {doneExercises.map((ex, i) => (
-                  <div key={i} className="history-ex-row">
-                    <div className="history-ex-name">
-                      <Check size={11} className="history-ex-check" />
-                      {ex.name}
-                    </div>
-                    <div className="history-ex-meta">
-                      {ex.sets && ex.reps && <span className="history-ex-tag">{ex.sets}×{ex.reps}</span>}
-                      {ex.restSeconds && <span className="history-ex-tag history-ex-rest">{ex.restSeconds}s rest</span>}
-                    </div>
-                  </div>
-                ))}
-                {skippedExercises.map((ex, i) => (
-                  <div key={i} className="history-ex-row history-ex-skipped">
-                    <div className="history-ex-name">
-                      <span className="history-ex-skip-dash">—</span>
-                      {ex.name}
-                    </div>
-                    <span className="history-ex-tag history-ex-skip-label">skipped</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )
-      })}
+      {visible.map(w => (
+        <HistoryItem key={w.id} w={w} expandedId={expandedId} setExpandedId={setExpandedId} />
+      ))}
       {hasMore && (
         <button className="history-load-more" onClick={e => { e.stopPropagation(); setPage(p => p + 1) }}>
           Load more ({history.length - visible.length} remaining)
@@ -116,6 +121,7 @@ function ListView({ history }) {
 // ── Calendar view ────────────────────────────────────────────────────
 function CalendarView({ history }) {
   const [offset, setOffset] = useState(0) // months back from today
+  const [expandedId, setExpandedId] = useState(null)
 
   const now = new Date()
   const year  = new Date(now.getFullYear(), now.getMonth() - offset, 1).getFullYear()
@@ -158,37 +164,31 @@ function CalendarView({ history }) {
           if (!day) return <div key={`e${i}`} className="cal-cell empty" />
           const workouts = workoutByDay[day] || []
           const isToday = isCurrentMonth && day === today
-          const done = workouts.reduce((s, w) => s + (w.doneCount ?? w.exercises?.filter(e => e.status === 'done').length ?? 0), 0)
-          const total = workouts.reduce((s, w) => s + (w.exercises?.length ?? 0), 0)
+          const tipParts = workouts.map(w =>
+            w.type === 'activity'
+              ? w.activityName
+              : `${w.doneCount ?? w.exercises?.filter(e => e.status === 'done').length ?? 0} exercises`
+          )
           return (
             <div key={day} className={`cal-cell ${workouts.length ? 'has-workout' : ''} ${isToday ? 'today' : ''}`}>
               <span className="cal-day-num">{day}</span>
               {workouts.length > 0 && (
-                <span className="cal-dot" title={`${done}/${total} done · ${formatTime(workouts[0].completedAt)}`} />
+                <span className="cal-dot" title={tipParts.join(' · ')} />
               )}
             </div>
           )
         })}
       </div>
-      {/* Show workouts for days that have them */}
-      {Object.entries(workoutByDay).sort((a,b) => b[0]-a[0]).map(([day, ws]) => ws.map(w => {
-        const done = w.doneCount ?? w.exercises?.filter(e => e.status === 'done').length ?? 0
-        const total = w.exercises?.length ?? 0
-        const dur = formatDuration(w.durationSeconds)
-          const isAct = w.type === 'activity'
-          return (
-          <div className={`history-item ${isAct ? 'history-item-activity' : ''}`} key={w.id}>
-            <div className="history-item-header">
-              <span className="history-item-date">{isAct ? <><Activity size={13} style={{display:'inline',verticalAlign:'middle',marginRight:4}} />{w.activityName}</> : formatDate(w.completedAt)}</span>
-              <span className="history-item-time">{formatTime(w.completedAt)}</span>
-            </div>
-            <div className="history-item-meta">
-              <span className="history-item-summary">{isAct ? formatDate(w.completedAt) : `${done}/${total} done`}</span>
-              {dur && <span className="history-item-dur">· {dur}</span>}
-            </div>
-          </div>
-        )
-      }))}
+      {/* Show entries for days that have them — newest day first */}
+      <div className="history-list" style={{marginTop: 16}}>
+        {Object.entries(workoutByDay)
+          .sort((a, b) => b[0] - a[0])
+          .flatMap(([, ws]) => ws)
+          .map(w => (
+            <HistoryItem key={w.id} w={w} expandedId={expandedId} setExpandedId={setExpandedId} />
+          ))
+        }
+      </div>
     </div>
   )
 }
