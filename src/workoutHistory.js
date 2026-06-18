@@ -36,6 +36,12 @@ export function getWorkoutToday() {
   return history.find(w => new Date(w.completedAt).toDateString() === today) || null
 }
 
+export function getTodayWorkouts() {
+  const history = getHistory()
+  const today = new Date().toDateString()
+  return history.filter(w => new Date(w.completedAt).toDateString() === today)
+}
+
 export function getSessionStats() {
   const history = getHistory()
   if (history.length === 0) return { totalSessions: 0, streakWeeks: 0 }

@@ -10,16 +10,23 @@ import OnboardingPills from './components/OnboardingPills.jsx'
 import ProfileEditor from './components/ProfileEditor.jsx'
 import WeekProgram from './components/WeekProgram.jsx'
 import QuickReplies from './components/QuickReplies.jsx'
-import { saveWorkout, saveActivity, getHistory, getSessionStats, getWorkoutToday } from './workoutHistory.js'
+import { saveWorkout, saveActivity, getHistory, getSessionStats, getWorkoutToday, getTodayWorkouts } from './workoutHistory.js'
 import { saveProfile, loadProfile, clearProfile } from './memberProfile.js'
 import { saveProgram, loadProgram } from './programStorage.js'
 import { buildSystemPrompt } from './buildSystemPrompt.js'
 import WelcomeScreen from './components/WelcomeScreen.jsx'
 
-function makeInitialMessage(existingProfile, todayWorkout) {
+function makeInitialMessage(existingProfile, todayWorkout, todayWorkoutCount = 0) {
   if (existingProfile) {
     const name = existingProfile.memberName || 'there'
     const goal = existingProfile.goal || 'your training'
+    if (todayWorkoutCount > 1) {
+      return {
+        role: 'coach',
+        content: `Hey ${name}! You've already crushed ${todayWorkoutCount} sessions today — impressive. How are you feeling? Want to add more or just recover?`,
+        timestamp: Date.now()
+      }
+    }
     if (todayWorkout) {
       const doneCount = todayWorkout.exercises?.filter(e => e.status === 'done').length || 0
       return {
@@ -77,10 +84,11 @@ export default function App() {
   const existingProfile = loadProfile()
   const recentHistory = getHistory()
   const todayWorkout = getWorkoutToday()
-  const systemPrompt = buildSystemPrompt(existingProfile, recentHistory, todayWorkout)
+  const todayWorkouts = getTodayWorkouts()
+  const systemPrompt = buildSystemPrompt(existingProfile, recentHistory, todayWorkouts)
 
   const [showWelcome, setShowWelcome] = useState(!existingProfile)
-  const [messages, setMessages] = useState([makeInitialMessage(existingProfile, todayWorkout)])
+  const [messages, setMessages] = useState([makeInitialMessage(existingProfile, todayWorkout, todayWorkouts.length)])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [phase, setPhase] = useState(todayWorkout ? 2 : existingProfile ? 3 : 1)
@@ -106,7 +114,7 @@ export default function App() {
         ? '__checkin_trigger__'
         : '__plan_trigger__'
       // Send a hidden system trigger the AI interprets via the system prompt
-      sendMessageWithText(trigger, [makeInitialMessage(existingProfile, todayWorkout)])
+      sendMessageWithText(trigger, [makeInitialMessage(existingProfile, todayWorkout, todayWorkouts.length)])
     }
   }, []) // eslint-disable-line
 
@@ -132,8 +140,8 @@ export default function App() {
       // Rebuild prompt with latest profile/history each send
       const currentProfile = loadProfile()
       const currentHistory = getHistory()
-      const currentTodayWorkout = getWorkoutToday()
-      const currentSystemPrompt = buildSystemPrompt(currentProfile, currentHistory, currentTodayWorkout)
+      const currentTodayWorkouts = getTodayWorkouts()
+      const currentSystemPrompt = buildSystemPrompt(currentProfile, currentHistory, currentTodayWorkouts)
 
       let responseText = await geminiChat(currentSystemPrompt, newMessages)
 

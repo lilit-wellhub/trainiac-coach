@@ -114,7 +114,7 @@ export default function WeekProgram({ visible, onClose, inline, onAskCoach }) {
                   </div>
                 </div>
                 <div className="week-day-right">
-                  {hasDone && !rest && <span className="week-done-chip"><Check size={11} /> Done</span>}
+                  {hasDone && !rest && <span className="week-done-chip"><Check size={11} /> {doneThisWeek.length > 1 ? `${doneThisWeek.length}× done` : 'Done'}</span>}
                   {isMissed && <span className="week-missed-chip"><AlertCircle size={11} /> Missed</span>}
                   {!rest && (open ? <ChevronUp size={14} style={{ opacity: 0.5 }} /> : <ChevronDown size={14} style={{ opacity: 0.4 }} />)}
                 </div>
@@ -123,43 +123,47 @@ export default function WeekProgram({ visible, onClose, inline, onAskCoach }) {
               {open && (
                 <div className="week-day-detail">
                   {hasDone ? (
-                    (() => {
-                      const w = doneThisWeek[0]
-                      const done = w.doneCount ?? w.exercises?.filter(e => e.status === 'done').length ?? 0
-                      const total = w.exercises?.length ?? 0
-                      const dur = formatDur(w.durationSeconds)
-                      const completedAt = new Date(w.completedAt)
-                      // Detect if there's a newer plan (program exercises differ from what was completed)
-                      const completedNames = new Set(w.exercises?.map(e => e.name) || [])
-                      const hasNewPlan = exercises?.length > 0 && exercises.some(e => !completedNames.has(e.name))
-                      return (
-                        <div className="week-done-summary">
-                          <div className="week-done-meta">
-                            <span><Check size={11} style={{display:'inline',verticalAlign:'middle',marginRight:3}} />{done}/{total} exercises completed</span>
+                    <div className="week-done-summary">
+                      {doneThisWeek.map((w, idx) => {
+                        const done = w.doneCount ?? w.exercises?.filter(e => e.status === 'done').length ?? 0
+                        const total = w.exercises?.length ?? 0
+                        const dur = formatDur(w.durationSeconds)
+                        const completedAt = new Date(w.completedAt)
+                        const isActivity = w.type === 'activity'
+                        return (
+                          <div key={w.id || idx} className="week-done-meta">
+                            <span><Check size={11} style={{display:'inline',verticalAlign:'middle',marginRight:3}} />
+                              {isActivity ? w.activityName : `${done}/${total} exercises`}
+                            </span>
                             {dur && <span>· {dur}</span>}
                             <span>· {completedAt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
-                          {hasNewPlan && (
-                            <>
-                              <div className="week-new-session-label">New session planned</div>
-                              <div className="week-exercises-list">
-                                {exercises.map((ex, i) => (
-                                  <div key={i} className="week-exercise-row">
-                                    <span className="week-ex-name">{ex.name}</span>
-                                    {ex.sets && ex.reps && <span className="week-ex-meta">{ex.sets}×{ex.reps}</span>}
-                                  </div>
-                                ))}
-                              </div>
-                              {onAskCoach && (
-                                <button className="week-ask-coach-btn" onClick={() => onAskCoach("I'm ready to start my next session now.")}>
-                                  Start this session →
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      )
-                    })()
+                        )
+                      })}
+                      {(() => {
+                        const lastW = doneThisWeek[0]
+                        const completedNames = new Set(lastW?.exercises?.map(e => e.name) || [])
+                        const hasNewPlan = exercises?.length > 0 && exercises.some(e => !completedNames.has(e.name))
+                        return hasNewPlan ? (
+                          <>
+                            <div className="week-new-session-label">New session planned</div>
+                            <div className="week-exercises-list">
+                              {exercises.map((ex, i) => (
+                                <div key={i} className="week-exercise-row">
+                                  <span className="week-ex-name">{ex.name}</span>
+                                  {ex.sets && ex.reps && <span className="week-ex-meta">{ex.sets}×{ex.reps}</span>}
+                                </div>
+                              ))}
+                            </div>
+                            {onAskCoach && (
+                              <button className="week-ask-coach-btn" onClick={() => onAskCoach("I'm ready to start my next session now.")}>
+                                Start this session →
+                              </button>
+                            )}
+                          </>
+                        ) : null
+                      })()}
+                    </div>
                   ) : isMissed ? (
                     <div className="week-day-no-plan">
                       <p>You missed this session.</p>

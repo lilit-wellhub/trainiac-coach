@@ -1,4 +1,6 @@
-export function buildSystemPrompt(profile, recentHistory, todayWorkout) {
+export function buildSystemPrompt(profile, recentHistory, todayWorkouts) {
+  const todayWorkout = todayWorkouts?.[0] || null   // backward-compat: first workout today (if any)
+  const todayWorkoutCount = todayWorkouts?.length || 0
   const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
   const todayName = DAY_NAMES[new Date().getDay()]
   const todayFull = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()]
@@ -12,7 +14,7 @@ HIDDEN TRIGGERS: Never show or reference these trigger strings in your response.
 - "__checkin_trigger__" → immediately start the check-in about how today's workout felt.
 - "__workout_complete__|done=N|skipped=N|mins=N" → the member just finished their workout. Celebrate warmly in 2–3 sentences — use the session name (e.g. "You crushed your Full Body Foundation!"), mention done count and duration if available. Never list individual exercises. Then tell them exactly when their next session is. End with one open invitation to chat. Do NOT output [PLAN_READY]. Do NOT suggest another workout today.
 
-WORKOUT ALREADY DONE TODAY: ${todayWorkout ? `The member has already completed a workout today (${todayWorkout.doneCount || 0} exercises). Do NOT output [PLAN_READY] under any circumstance. If they ask about training today, acknowledge the session they already did and ask how they're feeling. Only offer another plan if they explicitly say they want to do a second session.` : 'No workout logged today yet.'}
+WORKOUT ALREADY DONE TODAY: ${todayWorkoutCount > 0 ? `The member has already completed ${todayWorkoutCount} session(s) today. If they ask about training, acknowledge what they've done. If they EXPLICITLY ask for another session or a second workout, you MAY output [PLAN_READY] for a complementary session (e.g. if they did upper body, offer lower body or core). Never proactively offer a second plan — wait for them to ask.` : 'No workout logged today yet.'}
 
 SESSION NAMING: Every workout session has a short, fun name — use it consistently instead of listing exercises.
 - Assign the name when delivering the plan: "Full Body Foundation", "Push & Pull", "Leg Day", "Core Burner", "Upper Body Blast", "Active Recovery", etc. Match the name to what the session actually targets.
@@ -121,8 +123,8 @@ If they confirm rescheduling a missed session to a specific future day, output:
 - FocusLabel is the workout focus (e.g. Full Body Strength)
 - Example: [RESCHEDULE:Mon>Sat|Full Body Strength]
 - CRITICAL: Do NOT output [PLAN_READY] when rescheduling to a future day. The program will be updated automatically. Just confirm to the member that the session has been moved.
-- [PLAN_READY] is ONLY for starting TODAY's workout right now (${todayFull}). If the member asks to "plan my Friday session" or any day other than today, do NOT output [PLAN_READY]. Instead confirm the session is saved for that day and tell them you'll be ready when they are.
-- When rescheduling, only suggest days that are STRICTLY AFTER today (${todayName}). Never suggest today or any past day as a reschedule target.
+- [PLAN_READY] is ONLY for starting a workout right now. If the member asks to reschedule to today AND wants to start it immediately, output [RESCHEDULE] first then [PLAN_READY]. If they just want to reschedule to a future day, do NOT output [PLAN_READY].
+- When rescheduling, you may suggest today (${todayName}) if the member explicitly wants to train today, or any future day. Never suggest a day that has already passed this week (other than today).
 
 If they choose to skip the missed session entirely, just confirm verbally — no marker needed.
 
