@@ -2,6 +2,20 @@ import { useState, useEffect, useRef } from 'react'
 import { Play, X, CheckCircle, SkipForward, RotateCcw, Dumbbell, MessageCircle, Timer, ChevronDown, ChevronUp, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
 import { getVideoUrl } from '../videoLibrary.js'
 import { getEquipment } from '../equipmentLookup.js'
+import { getSuggestedWeight } from '../workoutHistory.js'
+
+// ── Weight / rep helpers ─────────────────────────────────────────────
+const WEIGHT_GEAR_KEYWORDS = ['barbell', 'dumbbell', 'cable', 'kettlebell', 'machine', 'bar', 'ez']
+function isWeightedExercise(name) {
+  const gear = getEquipment(name)
+  return gear.some(g => WEIGHT_GEAR_KEYWORDS.some(k => g.toLowerCase().includes(k)))
+}
+
+function parseTargetReps(reps) {
+  if (!reps) return 8
+  const n = parseInt(reps)
+  return isNaN(n) ? null : n  // null for AMRAP / time-based
+}
 
 // ── Timers ──────────────────────────────────────────────────────────
 function useWorkoutTimer(running) {
@@ -66,20 +80,37 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
   const [activeGif, setActiveGif] = useState(null)
   const [started, setStarted] = useState(false)
   const [reordering, setReordering] = useState(false)
-  const [setsDone, setSetsDone] = useState({})   // { name: [true,false,...] }
+  const [setsDone, setSetsDone] = useState({})     // { name: [true,false,...] }
   const [skipped, setSkipped]   = useState({})
   const [expanded, setExpanded] = useState({})
   const [restLabel, setRestLabel] = useState('')
-  const completedRef = useRef(false)  // guard: onComplete fires only once per session
+  const [setWeights, setSetWeights] = useState({}) // { name: [kg, kg, ...] } — null means bodyweight
+  const [setReps, setSetReps]       = useState({}) // { name: [n, n, ...] }
+  const completedRef = useRef(false)
 
   const rest = useRestTimer(() => setRestLabel(''))
 
   useEffect(() => {
-    setExercises(initialExercises || [])
+    const exList = initialExercises || []
+    setExercises(exList)
     setStarted(false); setReordering(false)
     setSetsDone({}); setSkipped({})
     setExpanded({}); setActiveGif(null)
-    completedRef.current = false  // reset for new exercise set
+    completedRef.current = false
+
+    // Initialise per-set weight + reps from history (with progressive overload suggestion)
+    const weights = {}, reps = {}
+    for (const ex of exList) {
+      const targetReps = parseTargetReps(ex.reps)
+      const numSets = ex.sets || 3
+      if (isWeightedExercise(ex.name)) {
+        const suggested = getSuggestedWeight(ex.name, targetReps)
+        weights[ex.name] = Array(numSets).fill(suggested ?? 0)
+      }
+      reps[ex.name] = Array(numSets).fill(targetReps ?? ex.reps ?? '')
+    }
+    setSetWeights(weights)
+    setSetReps(reps)
   }, [initialExercises])
 
   // ── Derived state (computed before hooks so the effect below can use them) ──
@@ -96,15 +127,24 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
   useEffect(() => {
     if (allSettled && started && !completedRef.current) {
       completedRef.current = true  // prevent double-fire if user unchecks/rechecks a set
-      const exStatuses = exercises.map(ex => ({
-        name: ex.name,
-        status: skipped[ex.name] ? 'skipped' : 'done',
-        sets: ex.sets,
-        reps: ex.reps,
-        restSeconds: ex.restSeconds,
-        supersetRestSeconds: ex.supersetRestSeconds,
-        supersetId: ex.supersetId,
-      }))
+      const exStatuses = exercises.map(ex => {
+        const doneArr = setsDone[ex.name] || []
+        const setData = doneArr.map((done, i) => ({
+          done,
+          weight: setWeights[ex.name]?.[i] ?? null,
+          repsCompleted: setReps[ex.name]?.[i] ?? parseTargetReps(ex.reps),
+        }))
+        return {
+          name: ex.name,
+          status: skipped[ex.name] ? 'skipped' : 'done',
+          sets: ex.sets,
+          reps: ex.reps,
+          restSeconds: ex.restSeconds,
+          supersetRestSeconds: ex.supersetRestSeconds,
+          supersetId: ex.supersetId,
+          setData,
+        }
+      })
       const freshDone = exStatuses.filter(e => e.status === 'done').length
       const freshSkipped = exStatuses.filter(e => e.status === 'skipped').length
       onComplete?.({
@@ -172,6 +212,32 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
   }
   const toggleExpand = (name) => setExpanded(p => ({ ...p, [name]: !p[name] }))
 
+  // Weight / reps adjusters — also propagate to subsequent uncompleted sets
+  const adjustWeight = (name, setIdx, delta) => {
+    setSetWeights(prev => {
+      const arr = [...(prev[name] || [])]
+      const next = Math.max(0, Math.round(((arr[setIdx] ?? 0) + delta) * 2) / 2)
+      // propagate to all later unchecked sets
+      const done = setsDone[name] || []
+      for (let i = setIdx; i < arr.length; i++) {
+        if (!done[i]) arr[i] = next
+      }
+      return { ...prev, [name]: arr }
+    })
+  }
+
+  const adjustReps = (name, setIdx, delta) => {
+    setSetReps(prev => {
+      const arr = [...(prev[name] || [])]
+      const next = Math.max(1, (arr[setIdx] ?? 8) + delta)
+      const done = setsDone[name] || []
+      for (let i = setIdx; i < arr.length; i++) {
+        if (!done[i]) arr[i] = next
+      }
+      return { ...prev, [name]: arr }
+    })
+  }
+
 
   const handleStart = () => {
     setStarted(true)
@@ -206,6 +272,18 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
               {gear.length > 0 && (
                 <div className="exercise-gear">{gear.join(' · ')}</div>
               )}
+              {(() => {
+                if (!started || !isWeightedExercise(ex.name)) return null
+                const suggested = getSuggestedWeight(ex.name, parseTargetReps(ex.reps))
+                const current = setWeights[ex.name]?.[0]
+                if (!suggested || current === suggested) return null
+                const isPR = suggested > (current ?? 0)
+                return (
+                  <div className="exercise-overload-hint">
+                    {isPR ? '↑' : '↓'} Suggested: {suggested}kg {isPR ? '(progressive overload)' : '(same as last session)'}
+                  </div>
+                )
+              })()}
             </div>
           </div>
           <div className="exercise-actions">
@@ -234,11 +312,35 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
 
         {open && started && !skipped && (
           <div className="set-tracker">
-            {sets.map((d, si) => (
-              <button key={si} className={`set-btn ${d ? 'set-done' : ''}`} onClick={() => markSet(ex, si)}>
-                {d && <CheckCircle size={14} />} Set {si + 1}
-              </button>
-            ))}
+            {sets.map((d, si) => {
+              const weighted = isWeightedExercise(ex.name)
+              const targetReps = parseTargetReps(ex.reps)
+              const isTimeBased = ex.reps && (ex.reps.includes('s') || ex.reps.toLowerCase().includes('amrap'))
+              return weighted ? (
+                <div key={si} className={`set-row ${d ? 'set-row-done' : ''}`}>
+                  <span className="set-row-num">Set {si + 1}</span>
+                  <div className="set-adj-group">
+                    <button className="set-adj-btn" onClick={() => adjustWeight(ex.name, si, -2.5)} disabled={d}>−</button>
+                    <span className="set-adj-val">{setWeights[ex.name]?.[si] > 0 ? `${setWeights[ex.name][si]}kg` : '—'}</span>
+                    <button className="set-adj-btn" onClick={() => adjustWeight(ex.name, si, +2.5)} disabled={d}>+</button>
+                  </div>
+                  {!isTimeBased && (
+                    <div className="set-adj-group">
+                      <button className="set-adj-btn" onClick={() => adjustReps(ex.name, si, -1)} disabled={d}>−</button>
+                      <span className="set-adj-val">{setReps[ex.name]?.[si] ?? targetReps ?? ex.reps} reps</span>
+                      <button className="set-adj-btn" onClick={() => adjustReps(ex.name, si, +1)} disabled={d}>+</button>
+                    </div>
+                  )}
+                  <button className={`set-check-btn ${d ? 'done' : ''}`} onClick={() => markSet(ex, si)}>
+                    {d ? <CheckCircle size={16} /> : <span className="set-check-circle" />}
+                  </button>
+                </div>
+              ) : (
+                <button key={si} className={`set-btn ${d ? 'set-done' : ''}`} onClick={() => markSet(ex, si)}>
+                  {d && <CheckCircle size={14} />} Set {si + 1}
+                </button>
+              )
+            })}
           </div>
         )}
 

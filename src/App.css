@@ -1639,6 +1639,12 @@ body {
   gap: 8px;
   padding: 10px 14px;
   flex-wrap: wrap;
+  /* weighted exercises render .set-row children which are full-width */
+}
+.set-tracker:has(.set-row) {
+  flex-direction: column;
+  gap: 0;
+  padding: 4px 0;
 }
 
 .set-btn {
@@ -1666,6 +1672,119 @@ body {
   background: rgba(242,73,107,0.3);
   border-color: var(--wh-primary);
   color: #fff;
+}
+
+/* ─── Per-set weight + reps rows ────────────────────────────────── */
+.set-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  width: 100%;
+}
+.set-row:last-child { border-bottom: none; }
+
+.set-row-done {
+  opacity: 0.55;
+}
+
+.set-row-num {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.set-adj-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+.set-adj-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  font-family: inherit;
+  transition: color 0.1s;
+}
+.set-adj-btn:hover:not(:disabled) { color: #fff; }
+.set-adj-btn:disabled { opacity: 0.3; cursor: default; }
+
+.set-adj-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  min-width: 52px;
+  text-align: center;
+}
+
+.set-check-btn {
+  margin-left: auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+  color: #fff;
+}
+.set-check-btn:hover:not(.done) { border-color: var(--wh-primary); }
+.set-check-btn.done {
+  background: var(--wh-primary);
+  border-color: var(--wh-primary);
+}
+
+.set-check-circle {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.4);
+  display: block;
+}
+
+.exercise-overload-hint {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  margin-top: 2px;
+  font-style: italic;
+}
+
+/* ─── History set data chips ─────────────────────────────────────── */
+.history-ex-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-ex-sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-left: 20px;
+}
+
+.history-ex-set-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--wh-primary-light);
+  color: var(--wh-primary-dark);
 }
 
 /* ─── Exercise expand icon ───────────────────────────────────────── */

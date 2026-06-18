@@ -171,7 +171,14 @@ ${behaviorInstruction}`
   if (recentHistory && recentHistory.length > 0) {
     const historyLines = recentHistory.slice(0, 5).map(w => {
       const date = new Date(w.completedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-      const done = w.exercises?.filter(e => e.status === 'done').map(e => e.name).join(', ') || 'none logged'
+      const done = w.exercises?.filter(e => e.status === 'done').map(e => {
+        const sets = e.setData?.filter(s => s.done !== false)
+        if (sets?.length) {
+          const detail = sets.map(s => s.weight > 0 ? `${s.weight}kg×${s.repsCompleted ?? e.reps}` : s.repsCompleted ?? e.reps).join(', ')
+          return `${e.name} (${detail})`
+        }
+        return e.sets && e.reps ? `${e.name} ${e.sets}×${e.reps}` : e.name
+      }).join(', ') || 'none logged'
       const skipped = w.exercises?.filter(e => e.status === 'skipped').map(e => e.name).join(', ')
       return `- ${date}: completed ${done}${skipped ? ` | skipped: ${skipped}` : ''}`
     }).join('\n')

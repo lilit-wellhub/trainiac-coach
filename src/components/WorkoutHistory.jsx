@@ -66,18 +66,36 @@ function HistoryItem({ w, expandedId, setExpandedId }) {
 
       {isOpen && (
         <div className="history-item-detail">
-          {doneEx.map((ex, i) => (
-            <div key={i} className="history-ex-row">
-              <div className="history-ex-name">
-                <Check size={11} className="history-ex-check" />
-                {ex.name}
+          {doneEx.map((ex, i) => {
+            const doneSets = ex.setData?.filter(s => s.done !== false) || []
+            const hasSetData = doneSets.length > 0
+            return (
+              <div key={i} className="history-ex-block">
+                <div className="history-ex-row">
+                  <div className="history-ex-name">
+                    <Check size={11} className="history-ex-check" />
+                    {ex.name}
+                  </div>
+                  {!hasSetData && (
+                    <div className="history-ex-meta">
+                      {ex.sets && ex.reps && <span className="history-ex-tag">{ex.sets}×{ex.reps}</span>}
+                      {ex.restSeconds && <span className="history-ex-tag history-ex-rest">{ex.restSeconds}s rest</span>}
+                    </div>
+                  )}
+                </div>
+                {hasSetData && (
+                  <div className="history-ex-sets">
+                    {doneSets.map((s, si) => (
+                      <span key={si} className="history-ex-set-chip">
+                        {s.weight > 0 ? `${s.weight}kg` : '—'} × {s.repsCompleted ?? ex.reps}
+                      </span>
+                    ))}
+                    {ex.restSeconds && <span className="history-ex-tag history-ex-rest" style={{marginLeft:4}}>{ex.restSeconds}s rest</span>}
+                  </div>
+                )}
               </div>
-              <div className="history-ex-meta">
-                {ex.sets && ex.reps && <span className="history-ex-tag">{ex.sets}×{ex.reps}</span>}
-                {ex.restSeconds && <span className="history-ex-tag history-ex-rest">{ex.restSeconds}s rest</span>}
-              </div>
-            </div>
-          ))}
+            )
+          })}
           {skippedEx.map((ex, i) => (
             <div key={i} className="history-ex-row history-ex-skipped">
               <div className="history-ex-name">

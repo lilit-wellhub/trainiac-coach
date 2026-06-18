@@ -37,6 +37,26 @@ export function getWorkoutToday() {
   return history.find(w => new Date(w.completedAt).toDateString() === today) || null
 }
 
+// Returns suggested weight for an exercise based on last session + progressive overload.
+// If all sets hit target reps last time → suggest +2.5kg. Otherwise hold.
+export function getSuggestedWeight(exerciseName, targetReps) {
+  const history = getHistory()
+  for (const workout of history) {
+    if (workout.type === 'activity') continue
+    const ex = workout.exercises?.find(e => e.name === exerciseName)
+    if (!ex?.setData?.length) continue
+    const doneSets = ex.setData.filter(s => s.done !== false && s.weight > 0)
+    if (!doneSets.length) continue
+    const lastWeight = Math.max(...doneSets.map(s => s.weight))
+    if (lastWeight <= 0) return null
+    const hitTarget = targetReps
+      ? doneSets.every(s => (s.repsCompleted ?? 0) >= targetReps)
+      : false
+    return hitTarget ? lastWeight + 2.5 : lastWeight
+  }
+  return null
+}
+
 export function getTodayWorkouts() {
   const history = getHistory()
   const today = new Date().toDateString()
