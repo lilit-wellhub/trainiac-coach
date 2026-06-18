@@ -99,6 +99,11 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
       const exStatuses = exercises.map(ex => ({
         name: ex.name,
         status: skipped[ex.name] ? 'skipped' : 'done',
+        sets: ex.sets,
+        reps: ex.reps,
+        restSeconds: ex.restSeconds,
+        supersetRestSeconds: ex.supersetRestSeconds,
+        supersetId: ex.supersetId,
       }))
       const freshDone = exStatuses.filter(e => e.status === 'done').length
       const freshSkipped = exStatuses.filter(e => e.status === 'skipped').length

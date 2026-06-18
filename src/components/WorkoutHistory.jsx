@@ -78,24 +78,27 @@ function ListView({ history }) {
 
             {isOpen && (
               <div className="history-item-detail">
-                {doneExercises.length > 0 && (
-                  <div className="history-item-exercises">
-                    {doneExercises.map((ex, i) => (
-                      <span key={i} className="history-exercise-chip done">
-                        <Check size={10} style={{display:'inline',verticalAlign:'middle',marginRight:3}} />
-                        {ex.name}
-                        {ex.sets && ex.reps ? ` · ${ex.sets}×${ex.reps}` : ''}
-                      </span>
-                    ))}
+                {doneExercises.map((ex, i) => (
+                  <div key={i} className="history-ex-row">
+                    <div className="history-ex-name">
+                      <Check size={11} className="history-ex-check" />
+                      {ex.name}
+                    </div>
+                    <div className="history-ex-meta">
+                      {ex.sets && ex.reps && <span className="history-ex-tag">{ex.sets}×{ex.reps}</span>}
+                      {ex.restSeconds && <span className="history-ex-tag history-ex-rest">{ex.restSeconds}s rest</span>}
+                    </div>
                   </div>
-                )}
-                {skippedExercises.length > 0 && (
-                  <div className="history-item-exercises" style={{marginTop:6}}>
-                    {skippedExercises.map((ex, i) => (
-                      <span key={i} className="history-exercise-chip skipped">{ex.name}</span>
-                    ))}
+                ))}
+                {skippedExercises.map((ex, i) => (
+                  <div key={i} className="history-ex-row history-ex-skipped">
+                    <div className="history-ex-name">
+                      <span className="history-ex-skip-dash">—</span>
+                      {ex.name}
+                    </div>
+                    <span className="history-ex-tag history-ex-skip-label">skipped</span>
                   </div>
-                )}
+                ))}
               </div>
             )}
           </div>
