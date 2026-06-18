@@ -342,6 +342,31 @@ body {
   padding: 0 2px;
 }
 
+/* ─── System event (workout summary, etc.) ─────────────────────── */
+.system-event {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0;
+}
+.system-event-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #166534;
+}
+.system-event-card svg { color: #16a34a; flex-shrink: 0; }
+.system-event-time {
+  font-size: 11px;
+  color: #94A3B8;
+}
+
 /* ─── Typing Indicator ──────────────────────────────────────────── */
 .typing-indicator {
   display: flex;

@@ -114,8 +114,15 @@ export default function App() {
   const sendMessageWithText = useCallback(async (text, currentMessages) => {
     if (!text || loading) return
 
-    const isHiddenTrigger = text.startsWith('__')
-    const userMsg = { role: 'user', content: text, timestamp: Date.now(), hidden: isHiddenTrigger }
+    const isHiddenTrigger = text.startsWith('__') && text.endsWith('__')
+    const isWorkoutSummary = text.startsWith('__workout_complete__')
+    const userMsg = {
+      role: 'user',
+      content: text,
+      timestamp: Date.now(),
+      hidden: isHiddenTrigger,
+      type: isWorkoutSummary ? 'workout_summary' : undefined,
+    }
     const newMessages = [...currentMessages, userMsg]
     setMessages(newMessages)
     setInput('')
