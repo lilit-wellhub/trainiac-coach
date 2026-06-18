@@ -413,7 +413,7 @@ export default function App() {
     )},
     { id: 'progress', label: 'Train', icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M6 4v16M18 4v16M6 12h12M2 8h4M18 8h4M2 16h4M18 16h4"/>
+        <path d="M6 8h12M6 16h12"/><rect x="2" y="6" width="4" height="4" rx="1"/><rect x="2" y="14" width="4" height="4" rx="1"/><rect x="18" y="6" width="4" height="4" rx="1"/><rect x="18" y="14" width="4" height="4" rx="1"/>
       </svg>
     )},
     { id: 'me', label: 'Me', icon: (
