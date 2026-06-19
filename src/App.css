@@ -1446,7 +1446,7 @@ body {
   margin-top: 32px;
   margin-bottom: 8px;
   font-size: 11px;
-  color: rgba(255,255,255,0.15);
+  color: rgba(0,0,0,0.12);
   cursor: default;
   user-select: none;
   letter-spacing: 0.5px;

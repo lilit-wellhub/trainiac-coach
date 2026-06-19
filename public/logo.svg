@@ -10,13 +10,12 @@
   <rect width="512" height="512" rx="96" fill="#0e0c1e"/>
   <rect width="512" height="512" rx="96" fill="url(#bg-glow)"/>
 
-  <!-- T crossbar (white/cream) -->
-  <rect x="148" y="148" width="216" height="52" rx="6" fill="#F0EDF8"/>
+  <!-- T crossbar (pure white) -->
+  <rect x="144" y="144" width="224" height="56" rx="8" fill="#FFFFFF"/>
 
   <!-- Lightning bolt (Wellhub Pink) -->
-  <!-- Classic T-bolt: bolt acts as stem of the T -->
   <polygon
-    points="278,200 234,298 264,298 228,368 300,268 268,268 294,200"
+    points="280,200 232,304 265,304 226,372 304,268 269,268 296,200"
     fill="#EE4266"
   />
 </svg>

@@ -473,8 +473,10 @@ export default function App() {
         <div className="header-inner">
           <div className="header-brand">
             <div className="header-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M13 2L4.09 12.96a.5.5 0 0 0 .41.79H11l-1 9 8.91-10.96a.5.5 0 0 0-.41-.79H13l1-9z" fill="white" strokeLinejoin="round"/>
+              <svg width="28" height="28" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                <rect width="512" height="512" rx="96" fill="#0e0c1e"/>
+                <rect x="144" y="144" width="224" height="56" rx="8" fill="#FFFFFF"/>
+                <polygon points="280,200 232,304 265,304 226,372 304,268 269,268 296,200" fill="#EE4266"/>
               </svg>
             </div>
             <span className="header-wordmark">Trainiac <span className="header-wordmark-sub">AI Coach</span></span>
