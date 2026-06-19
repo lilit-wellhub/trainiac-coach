@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './App.css'
@@ -6,13 +6,13 @@ import { registerSW } from 'virtual:pwa-register'
 
 function UpdateBanner() {
   const [needsUpdate, setNeedsUpdate] = useState(false)
-  const [updateSW, setUpdateSW] = useState(null)
+  const updateFn = useRef(null)
 
   useEffect(() => {
     const update = registerSW({
       onNeedRefresh() {
         setNeedsUpdate(true)
-        setUpdateSW(() => update)
+        updateFn.current = update
       },
       onOfflineReady() {},
     })
@@ -30,7 +30,7 @@ function UpdateBanner() {
     }}>
       <span>New version available</span>
       <button
-        onClick={() => updateSW?.(true)}
+        onClick={() => updateFn.current?.(true)}
         style={{
           background: '#fff', color: '#EE4266', border: 'none',
           borderRadius: 6, padding: '5px 14px', fontWeight: 700,
