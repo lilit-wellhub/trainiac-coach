@@ -167,6 +167,27 @@ export default function App() {
       }
       responseText = responseText.replace(/\[LOG_ACTIVITY:[^\]]+\]/g, '').trim()
 
+      // Parse PROFILE_UPDATE marker — emitted after [ONBOARDING_COMPLETE]
+      const profileUpdateMatch = responseText.match(/\[PROFILE_UPDATE:([^\]]+)\]/)
+      if (profileUpdateMatch) {
+        const fields = {}
+        profileUpdateMatch[1].split('|').forEach(pair => {
+          const eqIdx = pair.indexOf('=')
+          if (eqIdx > 0) fields[pair.slice(0, eqIdx).trim()] = pair.slice(eqIdx + 1).trim()
+        })
+        const existing = loadProfile() || {}
+        saveProfile({
+          ...existing,
+          memberName: fields.name || existing.memberName,
+          goal: fields.goal || existing.goal,
+          schedule: fields.schedule || existing.schedule,
+          sessionDuration: fields.duration || existing.sessionDuration,
+          equipment: fields.equipment || existing.equipment,
+          injuries: fields.injuries || existing.injuries,
+        })
+        responseText = responseText.replace(/\[PROFILE_UPDATE:[^\]]+\]\n?/g, '').trim()
+      }
+
       // Parse RESCHEDULE marker — format: [RESCHEDULE:FromDay>ToDay|FocusLabel]
       const rescheduleRegex = /\[RESCHEDULE:([^\]]+)\]/g
       let rescheduleMatch
@@ -480,7 +501,10 @@ export default function App() {
                 pillsSlot={
                   phase === 1
                     ? <OnboardingPills messages={messages} phase={phase} onSelect={handlePillSelect} />
-                    : <QuickReplies messages={messages} phase={phase} loading={loading} onSelect={(r) => sendMessageWithText(r, messages)} />
+                    : <QuickReplies messages={messages} phase={phase} loading={loading} onSelect={(r) => {
+                        if (r === 'Show me the plan') { setActiveTab('progress'); return }
+                        sendMessageWithText(r, messages)
+                      }} />
                 }
               />
               {showWorkoutCard && (
@@ -501,6 +525,7 @@ export default function App() {
                 visible={showWorkoutCard}
                 memberName={sessionData.memberName}
                 exercises={exercises}
+                onAskCoach={(msg) => { setActiveTab('train'); setTimeout(() => sendMessageWithText(msg || 'I want to adjust my workout', messages), 100) }}
                 onComplete={(summary) => {
                   saveWorkout({
                     memberName: sessionData.memberName,

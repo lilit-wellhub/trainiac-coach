@@ -820,6 +820,21 @@ body {
   font-size: 12px;
 }
 
+.workout-card-coach-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #EE4266;
+  font-size: 12px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.workout-card-coach-link:hover { opacity: 0.8; }
+
 /* ─── Exercise status ──────────────────────────────────────────── */
 .exercise-left {
   display: flex;

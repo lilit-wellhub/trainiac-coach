@@ -89,10 +89,20 @@ export default function WeekProgram({ visible, onClose, inline, onAskCoach }) {
           const hasDone = doneThisWeek.length > 0
           const open = expandedDay === day
 
-          // Missed: past day this week, not rest, no workout logged
+          // Missed: past day this week, not rest, no workout logged,
+          // AND the program existed before that day (can't miss a session that wasn't planned yet)
           const dayIdx = dayToIndex[day]
-          const isPast = !isToday && dayIdx < todayDayIndex && !(dayIdx === 0 && todayDayIndex !== 0) // Mon-Sat before today (Sun=0 edge handled)
-          const isMissed = !rest && isPast && !hasDone
+          const isPast = !isToday && dayIdx < todayDayIndex && !(dayIdx === 0 && todayDayIndex !== 0)
+          const now2 = new Date()
+          const weekMon = new Date(now2)
+          const wd = now2.getDay()
+          weekMon.setDate(now2.getDate() - (wd === 0 ? 6 : wd - 1))
+          weekMon.setHours(0, 0, 0, 0)
+          const offsetFromMon = dayIdx === 0 ? 6 : dayIdx - 1
+          const dayDate = new Date(weekMon)
+          dayDate.setDate(weekMon.getDate() + offsetFromMon)
+          const programCreatedBeforeDay = program.updatedAt && new Date(program.updatedAt) < dayDate
+          const isMissed = !rest && isPast && !hasDone && programCreatedBeforeDay
 
           return (
             <div key={day} className={`week-day-row ${isToday ? 'today' : ''} ${rest ? 'rest-day' : ''} ${isMissed ? 'missed-day' : ''}`}>

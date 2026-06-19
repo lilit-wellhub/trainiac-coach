@@ -75,7 +75,7 @@ function groupExercises(exercises) {
 }
 
 // ── WorkoutCard ──────────────────────────────────────────────────────
-export default function WorkoutCard({ visible, memberName, exercises: initialExercises, onComplete }) {
+export default function WorkoutCard({ visible, memberName, exercises: initialExercises, onComplete, onAskCoach }) {
   const [exercises, setExercises] = useState([])
   const [activeGif, setActiveGif] = useState(null)
   const [started, setStarted] = useState(false)
@@ -536,7 +536,9 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
       )}
       {started && !allSettled && (
         <div className="workout-card-footer">
-          <span className="workout-card-coach-hint"><MessageCircle size={13} /> Message your coach to adjust</span>
+          <button className="workout-card-coach-link" onClick={() => onAskCoach?.('I want to adjust my workout')}>
+            <MessageCircle size={13} /> Message your coach to adjust
+          </button>
         </div>
       )}
     </div>
