@@ -561,6 +561,19 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
         </div>
       )}
       {started && !allSettled && (
+        <div className="workout-progress-bar-wrap">
+          <div className="workout-progress-bar-track">
+            <div
+              className="workout-progress-bar-fill"
+              style={{ width: `${Math.round(((doneCount + skipCount) / exercises.length) * 100)}%` }}
+            />
+          </div>
+          <span className="workout-progress-label">
+            {doneCount + skipCount} of {exercises.length} done
+          </span>
+        </div>
+      )}
+      {started && !allSettled && (
         <div className="workout-card-footer">
           <button className="workout-card-coach-link" onClick={() => onAskCoach?.('I want to adjust my workout')}>
             <MessageCircle size={13} /> Message your coach to adjust
