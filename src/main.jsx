@@ -1,7 +1,47 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './App.css'
+import { registerSW } from 'virtual:pwa-register'
+
+function UpdateBanner() {
+  const [needsUpdate, setNeedsUpdate] = useState(false)
+  const [updateSW, setUpdateSW] = useState(null)
+
+  useEffect(() => {
+    const update = registerSW({
+      onNeedRefresh() {
+        setNeedsUpdate(true)
+        setUpdateSW(() => update)
+      },
+      onOfflineReady() {},
+    })
+  }, [])
+
+  if (!needsUpdate) return null
+
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+      background: '#EE4266', color: '#fff',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '10px 16px', fontSize: 14, fontWeight: 500,
+      boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+    }}>
+      <span>New version available</span>
+      <button
+        onClick={() => updateSW?.(true)}
+        style={{
+          background: '#fff', color: '#EE4266', border: 'none',
+          borderRadius: 6, padding: '5px 14px', fontWeight: 700,
+          fontSize: 13, cursor: 'pointer',
+        }}
+      >
+        Update now
+      </button>
+    </div>
+  )
+}
 
 const SITE_PASSWORD = import.meta.env.VITE_SITE_PASSWORD
 
@@ -83,6 +123,7 @@ class ErrorBoundary extends React.Component {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
+      <UpdateBanner />
       <PasswordGate>
         <App />
       </PasswordGate>
