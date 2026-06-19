@@ -1771,6 +1771,63 @@ body {
   opacity: 0.55;
 }
 
+.set-row-skipped {
+  opacity: 0.4;
+}
+
+.set-row-skipped-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  flex: 1;
+}
+
+.set-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.set-skip-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.3);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.set-skip-btn:hover { color: rgba(255,255,255,0.6); }
+
+.set-btn-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.set-btn.set-skipped {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.set-skip-inline-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.3);
+  cursor: pointer;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.set-skip-inline-btn:hover { color: rgba(255,255,255,0.6); }
+
 .set-row-num {
   font-size: 12px;
   font-weight: 600;
@@ -1811,7 +1868,6 @@ body {
 }
 
 .set-check-btn {
-  margin-left: auto;
   width: 30px;
   height: 30px;
   border-radius: 50%;

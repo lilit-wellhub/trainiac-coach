@@ -80,8 +80,7 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
   const [activeGif, setActiveGif] = useState(null)
   const [started, setStarted] = useState(false)
   const [reordering, setReordering] = useState(false)
-  const [setsDone, setSetsDone] = useState({})     // { name: [true,false,...] }
-  const [skipped, setSkipped]   = useState({})
+  const [setsDone, setSetsDone] = useState({})     // { name: [true|false|'skip',...] }
   const [expanded, setExpanded] = useState({})
   const [restLabel, setRestLabel] = useState('')
   const [setWeights, setSetWeights] = useState({}) // { name: [kg, kg, ...] } — null means bodyweight
@@ -94,7 +93,7 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
     const exList = initialExercises || []
     setExercises(exList)
     setStarted(false); setReordering(false)
-    setSetsDone({}); setSkipped({})
+    setSetsDone({})
     setExpanded({}); setActiveGif(null)
     completedRef.current = false
 
@@ -113,12 +112,14 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
     setSetReps(reps)
   }, [initialExercises])
 
-  // ── Derived state (computed before hooks so the effect below can use them) ──
-  const isDone    = (name) => { const s = setsDone[name]; return s ? s.every(Boolean) : false }
-  const isSkipped = (name) => !!skipped[name]
-  const allSettled = exercises.length > 0 && exercises.every(ex => isSkipped(ex.name) || isDone(ex.name))
-  const doneCount  = exercises.filter(ex => isDone(ex.name)).length
-  const skipCount  = exercises.filter(ex => isSkipped(ex.name)).length
+  // ── Derived state ─────────────────────────────────────────────────
+  // setsDone values: false = pending, true = done, 'skip' = skipped
+  const isExSettled = (name) => { const s = setsDone[name]; return s?.length > 0 && s.every(v => v !== false) }
+  const isDone      = (name) => isExSettled(name) && (setsDone[name] || []).some(v => v === true)
+  const isSkipped   = (name) => isExSettled(name) && (setsDone[name] || []).every(v => v === 'skip')
+  const allSettled  = exercises.length > 0 && exercises.every(ex => isExSettled(ex.name))
+  const doneCount   = exercises.filter(ex => isDone(ex.name)).length
+  const skipCount   = exercises.filter(ex => isSkipped(ex.name)).length
 
   // Timer depends on allSettled — must be declared after it
   const workoutElapsed = useWorkoutTimer(started && !allSettled)
@@ -136,7 +137,7 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
         }))
         return {
           name: ex.name,
-          status: skipped[ex.name] ? 'skipped' : 'done',
+          status: (setsDone[ex.name] || []).some(v => v === true) ? 'done' : 'skipped',
           sets: ex.sets,
           reps: ex.reps,
           restSeconds: ex.restSeconds,
@@ -174,19 +175,20 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
 
   const markSet = (ex, setIdx) => {
     const arr = [...getSets(ex)]
-    arr[setIdx] = !arr[setIdx]
-    const allDone = arr.every(Boolean)
+    if (arr[setIdx] === 'skip') return // can't toggle a skipped set
+    arr[setIdx] = arr[setIdx] === true ? false : true
+    const allDone = arr.every(v => v !== false)
 
     setSetsDone(prev => ({ ...prev, [ex.name]: arr }))
 
-    if (!arr[setIdx]) return // unchecking — no rest
+    if (arr[setIdx] !== true) return // unchecking — no rest
 
     if (allDone && ex.supersetGroup) {
       // Last set of this superset exercise — check if all peers also done this round
       const peers = exercises.filter(e => e.supersetGroup === ex.supersetGroup)
       const allPeersDone = peers.every(p => {
         const pSets = p.name === ex.name ? arr : (setsDone[p.name] || [])
-        return pSets.every(Boolean)
+        return pSets.every(v => v !== false)
       })
       if (allPeersDone) {
         setRestLabel(`Rest after superset`)
@@ -205,11 +207,18 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
     }
   }
 
-  const skipEx = (name) => setSkipped(p => ({ ...p, [name]: true }))
-  const undoEx = (name) => {
-    setSkipped(p => ({ ...p, [name]: false }))
-    setSetsDone(p => ({ ...p, [name]: Array(exercises.find(e => e.name === name)?.sets || 3).fill(false) }))
-  }
+  const skipSet = (name, si) => setSetsDone(p => {
+    const arr = [...(p[name] || Array(exercises.find(e => e.name === name)?.sets || 3).fill(false))]
+    arr[si] = 'skip'
+    return { ...p, [name]: arr }
+  })
+  const skipEx = (name) => setSetsDone(p => {
+    const numSets = exercises.find(e => e.name === name)?.sets || 3
+    const arr = [...(p[name] || Array(numSets).fill(false))]
+    for (let i = 0; i < arr.length; i++) if (arr[i] === false) arr[i] = 'skip'
+    return { ...p, [name]: arr }
+  })
+  const undoEx = (name) => setSetsDone(p => ({ ...p, [name]: Array(exercises.find(e => e.name === name)?.sets || 3).fill(false) }))
   const toggleExpand = (name) => setExpanded(p => ({ ...p, [name]: !p[name] }))
 
   // Weight / reps adjusters — also propagate to subsequent uncompleted sets
@@ -316,29 +325,46 @@ export default function WorkoutCard({ visible, memberName, exercises: initialExe
               const weighted = isWeightedExercise(ex.name)
               const targetReps = parseTargetReps(ex.reps)
               const isTimeBased = ex.reps && (ex.reps.includes('s') || ex.reps.toLowerCase().includes('amrap'))
+              const setSkippedState = d === 'skip'
+              const setDoneState = d === true
+              const settled = setDoneState || setSkippedState
               return weighted ? (
-                <div key={si} className={`set-row ${d ? 'set-row-done' : ''}`}>
+                <div key={si} className={`set-row ${setDoneState ? 'set-row-done' : ''} ${setSkippedState ? 'set-row-skipped' : ''}`}>
                   <span className="set-row-num">Set {si + 1}</span>
-                  <div className="set-adj-group">
-                    <button className="set-adj-btn" onClick={() => adjustWeight(ex.name, si, -2.5)} disabled={d}>−</button>
-                    <span className="set-adj-val">{setWeights[ex.name]?.[si] > 0 ? `${setWeights[ex.name][si]}kg` : '—'}</span>
-                    <button className="set-adj-btn" onClick={() => adjustWeight(ex.name, si, +2.5)} disabled={d}>+</button>
-                  </div>
-                  {!isTimeBased && (
-                    <div className="set-adj-group">
-                      <button className="set-adj-btn" onClick={() => adjustReps(ex.name, si, -1)} disabled={d}>−</button>
-                      <span className="set-adj-val">{setReps[ex.name]?.[si] ?? targetReps ?? ex.reps} reps</span>
-                      <button className="set-adj-btn" onClick={() => adjustReps(ex.name, si, +1)} disabled={d}>+</button>
-                    </div>
+                  {setSkippedState ? (
+                    <span className="set-row-skipped-label"><SkipForward size={11} /> Skipped</span>
+                  ) : (
+                    <>
+                      <div className="set-adj-group">
+                        <button className="set-adj-btn" onClick={() => adjustWeight(ex.name, si, -2.5)} disabled={settled}>−</button>
+                        <span className="set-adj-val">{setWeights[ex.name]?.[si] > 0 ? `${setWeights[ex.name][si]}kg` : '—'}</span>
+                        <button className="set-adj-btn" onClick={() => adjustWeight(ex.name, si, +2.5)} disabled={settled}>+</button>
+                      </div>
+                      {!isTimeBased && (
+                        <div className="set-adj-group">
+                          <button className="set-adj-btn" onClick={() => adjustReps(ex.name, si, -1)} disabled={settled}>−</button>
+                          <span className="set-adj-val">{setReps[ex.name]?.[si] ?? targetReps ?? ex.reps} reps</span>
+                          <button className="set-adj-btn" onClick={() => adjustReps(ex.name, si, +1)} disabled={settled}>+</button>
+                        </div>
+                      )}
+                    </>
                   )}
-                  <button className={`set-check-btn ${d ? 'done' : ''}`} onClick={() => markSet(ex, si)}>
-                    {d ? <CheckCircle size={16} /> : <span className="set-check-circle" />}
-                  </button>
+                  <div className="set-row-actions">
+                    {!settled && <button className="set-skip-btn" onClick={() => skipSet(ex.name, si)}><SkipForward size={12} /></button>}
+                    <button className={`set-check-btn ${setDoneState ? 'done' : ''}`} onClick={() => !settled && markSet(ex, si)} disabled={setSkippedState}>
+                      {setDoneState ? <CheckCircle size={16} /> : <span className="set-check-circle" />}
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <button key={si} className={`set-btn ${d ? 'set-done' : ''}`} onClick={() => markSet(ex, si)}>
-                  {d && <CheckCircle size={14} />} Set {si + 1}
-                </button>
+                <div key={si} className={`set-btn-row`}>
+                  <button className={`set-btn ${setDoneState ? 'set-done' : ''} ${setSkippedState ? 'set-skipped' : ''}`} onClick={() => !settled && markSet(ex, si)}>
+                    {setDoneState && <CheckCircle size={14} />}
+                    {setSkippedState && <SkipForward size={14} />}
+                    Set {si + 1}
+                  </button>
+                  {!settled && <button className="set-skip-inline-btn" onClick={() => skipSet(ex.name, si)}><SkipForward size={11} /></button>}
+                </div>
               )
             })}
           </div>
