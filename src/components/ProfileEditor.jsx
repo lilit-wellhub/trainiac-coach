@@ -2,6 +2,8 @@ import { useState, useRef } from 'react'
 import { X, Check } from 'lucide-react'
 import { saveProfile } from '../memberProfile.js'
 
+const APP_VERSION = '1.2.0'
+
 const GOAL_OPTIONS = ['Build strength', 'Lose weight / tone', 'Run further & faster', 'Stay active & healthy', 'Improve flexibility', 'Recover from injury']
 const DAYS_OPTIONS = ['1–2× a week', '3× a week', '4–5× a week', 'Every day']
 const DURATION_OPTIONS = ['20–30 min', '45 min', '60+ min']
@@ -207,6 +209,27 @@ export default function ProfileEditor({ visible, profile, onClose, onSave, inlin
     // Do NOT navigate away — stay on profile tab
   }
 
+  const [tapCount, setTapCount] = useState(0)
+  const [showReset, setShowReset] = useState(false)
+  const tapTimer = useRef(null)
+
+  const handleVersionTap = () => {
+    const next = tapCount + 1
+    setTapCount(next)
+    clearTimeout(tapTimer.current)
+    if (next >= 7) {
+      setTapCount(0)
+      setShowReset(true)
+    } else {
+      tapTimer.current = setTimeout(() => setTapCount(0), 1500)
+    }
+  }
+
+  const handleReset = () => {
+    localStorage.clear()
+    window.location.reload()
+  }
+
   const content = (
     <div className={inline ? 'tab-panel profile-panel' : 'history-panel profile-panel'}>
       {!inline && <div className="history-header">
@@ -297,6 +320,23 @@ export default function ProfileEditor({ visible, profile, onClose, onSave, inlin
           {saved ? <><Check size={14} style={{display:'inline',verticalAlign:'middle',marginRight:4}} />Saved!</> : 'Save changes'}
         </button>
       </div>
+
+      <div className="profile-version" onClick={handleVersionTap}>
+        v{APP_VERSION}{tapCount > 0 && tapCount < 7 ? ` · ${7 - tapCount}` : ''}
+      </div>
+
+      {showReset && (
+        <div className="reset-overlay" onClick={() => setShowReset(false)}>
+          <div className="reset-dialog" onClick={e => e.stopPropagation()}>
+            <div className="reset-dialog-title">Reset all data?</div>
+            <div className="reset-dialog-body">This will clear your profile, workouts, and program. Can't be undone.</div>
+            <div className="reset-dialog-actions">
+              <button className="reset-btn-cancel" onClick={() => setShowReset(false)}>Cancel</button>
+              <button className="reset-btn-confirm" onClick={handleReset}>Reset</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 

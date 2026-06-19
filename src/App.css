@@ -1440,6 +1440,73 @@ body {
   cursor: default;
 }
 
+/* ─── Easter egg version tap ────────────────────────────────────── */
+.profile-version {
+  text-align: center;
+  margin-top: 32px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.15);
+  cursor: default;
+  user-select: none;
+  letter-spacing: 0.5px;
+}
+
+.reset-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+.reset-dialog {
+  background: #1e1b2e;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 24px;
+  width: 280px;
+  text-align: center;
+}
+.reset-dialog-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.reset-dialog-body {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+.reset-dialog-actions {
+  display: flex;
+  gap: 10px;
+}
+.reset-btn-cancel {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  cursor: pointer;
+}
+.reset-btn-confirm {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #EE4266;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 /* ─── Superset block ─────────────────────────────────────────────── */
 .exercise-block {
   display: flex;
