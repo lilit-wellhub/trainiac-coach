@@ -1,7 +1,7 @@
 # Trainiac AI Coach — Product Requirements Document
 
-**Version:** 1.0  
-**Last Updated:** 2026-06-17  
+**Version:** 1.2  
+**Last Updated:** 2026-06-18  
 **Parent Brand:** Wellhub  
 **Audience:** Engineers, PMs, and designers onboarding to this project
 
@@ -120,12 +120,15 @@ The member works through the session using the interactive WorkoutCard (set trac
 | Exercise list | Renders all exercises from `[PLAN_READY]` marker |
 | GIF player | Per-exercise animated GIF from GymVisual.com or local `/public/videos/` |
 | Equipment banner | "You'll need:" strip derived from `equipmentLookup.js` |
-| Set tracking | Checkbox per set; marks done or skipped per exercise |
+| Set tracking | Checkbox per set (bodyweight/cardio); per-set weight + reps rows for weighted exercises |
+| Per-set weight input | Weighted exercises (barbell, dumbbell, cable, etc.) show − / + adjusters for kg and reps per set |
+| Weight carry-forward | Adjusting weight/reps propagates forward to all subsequent uncompleted sets |
+| Progressive overload hint | If all sets hit target reps, inline hint suggests +2.5 kg for next session |
 | Superset support | Exercises grouped as A+B with "Rounds" model (one button = one set of all in group) |
 | Rest timer | Countdown between sets; intra-superset and inter-superset rest durations |
 | Elapsed timer | Runs from first interaction, stops when all exercises are settled |
 | Drag-to-reorder | Member can reorder exercises before starting |
-| Completion event | Emits `{ exercises, doneCount, skippedCount, durationSeconds }` on finish |
+| Completion event | Emits `{ exercises, doneCount, skippedCount, durationSeconds, setData }` on finish |
 
 ### 4.3 Weekly Program
 
@@ -144,9 +147,11 @@ The member works through the session using the interactive WorkoutCard (set trac
 | Feature | Description |
 |---------|-------------|
 | List view | Paginated, 5 entries per page. Shows date, time, X/Y done, duration |
-| Calendar view | Monthly grid; navigate months. Days with sessions marked |
-| Gym sessions | Show exercise breakdown |
-| Activity entries | Blue styling, Activity (Lucide) icon, name and duration |
+| Calendar view | Monthly grid; navigate months. Days with sessions marked. Uses same `HistoryItem` as list view for consistency |
+| Expandable entries | Tap a gym session to expand; shows exercise breakdown (one entry open at a time) |
+| Per-set chips | Expanded view shows `60 kg × 8` chip per set for weighted exercises |
+| Gym sessions | Show exercise breakdown with sets, reps, rest |
+| Activity entries | Blue styling, Activity (Lucide) icon, name and duration. Activities do not expand |
 
 ### 4.5 Profile Editor
 
@@ -279,7 +284,10 @@ Stripped text → ChatWindow
       "name": "string",
       "status": "done | skipped",
       "sets": 3,
-      "reps": 8
+      "reps": 8,
+      "setData": [
+        { "weight": 60, "repsCompleted": 8, "done": true }
+      ]
     }
   ],
   "doneCount": 5,
@@ -288,6 +296,8 @@ Stripped text → ChatWindow
   "memberName": "string"
 }
 ```
+
+`setData` is present only for weighted exercises (barbell, dumbbell, cable, machine, etc.). `weight` is in kg. Bodyweight and cardio exercises omit `setData` and use plain checkbox tracking.
 
 ### 6.5 Workout History Entry — Activity Log
 
@@ -383,6 +393,18 @@ Markers are embedded in Gemini's text response. App.jsx parses them with regex, 
 - Emit `[PLAN_READY:...]` for today's session only
 - Future-day requests do NOT trigger `[PLAN_READY]` — describe the plan in prose instead
 
+### Session Naming
+
+- Every workout plan must have a name (e.g. "Full Body Foundation", "Upper Push Day") — never just list exercises in the chat
+- The session name appears in `[PLAN_READY]` and is the first thing the coach announces
+- Coach never enumerates exercises in the conversational turn; the WorkoutCard does that
+
+### Multiple Sessions Per Day
+
+- A member may complete more than one session on the same day. This is valid and expected.
+- `getTodayWorkouts()` returns an array (not a single entry); the system prompt and WeekProgram handle the multi-session case
+- The coach acknowledges previous sessions for the day and asks whether the member wants to add more or recover
+
 ### Rest Days
 
 - Validate briefly ("Good call, recovery matters")
@@ -398,7 +420,7 @@ Markers are embedded in Gemini's text response. App.jsx parses them with regex, 
 
 ### Rescheduling
 
-- Offer concrete future-day options only (never today, never past days)
+- Offer concrete future-day options, including today (a missed session may be moved to the current day)
 - Emit `[RESCHEDULE:...]` only after member explicitly confirms a day
 - Do NOT emit `[PLAN_READY]` for rescheduled future-day sessions
 
@@ -467,7 +489,24 @@ Both `getVideoUrl(name)` and `getEquipment(name)` use **longest-key-first partia
 | Single active program | Only one weekly program is stored. Requesting a new plan overwrites the previous one. |
 | Custom injuries | User-created injury tags are stored separately in `trainiac_custom_injuries` and must be merged with preset tags in ProfileEditor. |
 | Streak only counts gym sessions | Logged activities (padel, cycling, etc.) do not count toward the weekly streak calculation. |
+| No smartwatch/wearable sync | Fitness data from wearables (heart rate, GPS runs) is not ingested. Deferred — see Backlog. |
+| Vercel auto-deploy | The Vercel ↔ GitHub integration may require periodic reconnection when the OAuth token expires. If pushes stop triggering deployments, reconnect in Vercel dashboard → Settings → Git. |
 
 ---
 
-*This document reflects the v1.0 scope of Trainiac AI Coach. For questions about the AI coaching logic, see the system prompt in `gemini.js`. For component-level implementation details, see inline comments in the component files.*
+## 11. Backlog
+
+Features discussed and scoped but not yet built. Each item is a candidate for the next sprint.
+
+| Item | Priority | Notes |
+|------|----------|-------|
+| Smartwatch / fitness file sync | Medium | Import `.fit` / `.gpx` files (universal). Add Web Bluetooth for Android/Chrome as enhancement. iOS Apple Health requires native wrapper — longer term. |
+| Goal milestone tracking | Medium | "You're 60% to your strength goal" — requires progress calculation against onboarding goal |
+| Push notifications | Medium | Remind member of scheduled sessions. Needs Service Worker + Notification API. |
+| Backend + user accounts | Low | Currently localStorage only. Cross-device sync requires auth + database. |
+| Wellhub SSO integration | Low | Would tie Trainiac identity to the member's Wellhub account |
+| Partner gym check-in feed | Low | Check-ins from partner gyms feed into coaching context (e.g. "you went to gym but didn't log a session") |
+
+---
+
+*This document reflects the v1.2 state of Trainiac AI Coach as of 2026-06-18. For questions about the AI coaching logic, see the system prompt in `buildSystemPrompt.js`. For component-level implementation details, see inline comments in the component files.*
