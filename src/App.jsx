@@ -474,8 +474,8 @@ export default function App() {
           <div className="header-brand">
             <div className="header-icon">
               <svg width="28" height="28" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-                <rect width="512" height="512" rx="96" fill="#0e0c1e"/>
-                <rect x="144" y="144" width="224" height="56" rx="8" fill="#FFFFFF"/>
+                <rect width="512" height="512" rx="96" fill="#F5F0EB"/>
+                <rect x="144" y="144" width="224" height="56" rx="8" fill="#0e0c1e"/>
                 <polygon points="280,200 232,304 265,304 226,372 304,268 269,268 296,200" fill="#EE4266"/>
               </svg>
             </div>
