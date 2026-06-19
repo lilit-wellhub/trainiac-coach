@@ -1,7 +1,7 @@
 # Trainiac AI Coach — Product Requirements Document
 
 **Version:** 1.2  
-**Last Updated:** 2026-06-18  
+**Last Updated:** 2026-06-19  
 **Parent Brand:** Wellhub  
 **Audience:** Engineers, PMs, and designers onboarding to this project
 
