@@ -523,12 +523,8 @@ export default function App() {
                   }, 800)
                 }}
               />
-              {!showWorkoutCard && (
-                <>
-                  <WeekProgram key={programVersion} inline onAskCoach={(msg) => { setActiveTab('train'); setTimeout(() => sendMessageWithText(msg, messages), 100) }} />
-                  <div className="tab-section-divider" />
-                </>
-              )}
+              <WeekProgram key={programVersion} inline onAskCoach={(msg) => { setActiveTab('train'); setTimeout(() => sendMessageWithText(msg, messages), 100) }} />
+              <div className="tab-section-divider" />
               <WorkoutHistory key={historyVersion} inline />
             </div>
           )}
