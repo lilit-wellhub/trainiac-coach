@@ -9,7 +9,7 @@ const PILL_OPTIONS = {
   ],
   schedule_days: ['1–2× a week', '3× a week', '4–5× a week', 'Every day'],
   schedule_duration: ['20–30 min', '45 min', '60+ min'],
-  location: ['Gym (full equipment)', 'Home with dumbbells', 'Bodyweight only', 'Outdoors'],
+  location: ['Gym', 'Home', 'Outdoors', 'Hotel / travel'],
   injuries: ['No injuries', 'Lower back', 'Knee', 'Shoulder', 'Hip / glute', 'Wrist'],
 }
 
