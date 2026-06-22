@@ -1,7 +1,7 @@
 # Trainiac AI Coach — Product Requirements Document
 
-**Version:** 1.2  
-**Last Updated:** 2026-06-19  
+**Version:** 1.3  
+**Last Updated:** 2026-06-22  
 **Parent Brand:** Wellhub  
 **Audience:** Engineers, PMs, and designers onboarding to this project
 
@@ -19,6 +19,8 @@
 8. [Coaching Rules](#8-coaching-rules)
 9. [Tech Stack and Infrastructure](#9-tech-stack-and-infrastructure)
 10. [Known Constraints and Limitations](#10-known-constraints-and-limitations)
+11. [Backlog](#11-backlog)
+12. [Version History](#12-version-history)
 
 ---
 
@@ -121,6 +123,7 @@ The member works through the session using the interactive WorkoutCard (set trac
 | GIF player | Per-exercise animated GIF from GymVisual.com or local `/public/videos/` |
 | Equipment banner | "You'll need:" strip derived from `equipmentLookup.js` |
 | Set tracking | Checkbox per set (bodyweight/cardio); per-set weight + reps rows for weighted exercises |
+| Per-set skip | Each set has its own skip button (SkipForward icon). Skipping one set does not mark the whole exercise as skipped. Exercise is only "skipped" if every set is individually skipped. |
 | Per-set weight input | Weighted exercises (barbell, dumbbell, cable, etc.) show − / + adjusters for kg and reps per set |
 | Weight carry-forward | Adjusting weight/reps propagates forward to all subsequent uncompleted sets |
 | Progressive overload hint | If all sets hit target reps, inline hint suggests +2.5 kg for next session |
@@ -128,6 +131,8 @@ The member works through the session using the interactive WorkoutCard (set trac
 | Rest timer | Countdown between sets; intra-superset and inter-superset rest durations |
 | Elapsed timer | Runs from first interaction, stops when all exercises are settled |
 | Drag-to-reorder | Member can reorder exercises before starting |
+| Workout progress bar | Horizontal bar at the bottom of the card (below exercises, above footer) showing `(doneCount + skipCount) / total` exercises settled. Trainiac Pink fill, animated. Visible only while workout is started and not yet complete. |
+| Ask Coach link | "Message your coach to adjust" button in the card footer switches to the Train tab and pre-fills the chat with an adjustment message. |
 | Completion event | Emits `{ exercises, doneCount, skippedCount, durationSeconds, setData }` on finish |
 
 ### 4.3 Weekly Program
@@ -163,6 +168,17 @@ The member works through the session using the interactive WorkoutCard (set trac
 | Equipment groups | Multi-select grouped by type |
 | Injury pills | Multi-select tags; auto-saves on toggle. Supports custom user-created tags |
 | Save feedback | Check icon + "Saved!" for 2 seconds, no navigation |
+| Easter egg reset | Tapping the version label 7 times within 1.5 s shows a confirmation dialog with a hard-reset option (clears all localStorage and reloads). Intended for testing. Version label is low-opacity and does not invite casual tapping. |
+
+### 4.6 PWA & Service Worker
+
+| Feature | Description |
+|---------|-------------|
+| PWA manifest | `vite-plugin-pwa` generates `manifest.webmanifest` with correct 192×192 and 512×512 icons (separate `any` and `maskable` purpose entries) |
+| Installable | App passes PWA install criteria. Chrome shows install prompt via browser UI. |
+| Service worker strategy | `registerType: 'prompt'` — SW does NOT auto-update; user is shown an in-app banner instead |
+| Update banner | Fixed banner at top of viewport (Trainiac Pink) when a new SW version is waiting. "Update now" button calls `update(true)` via `useRef` (not `useState` — avoids React updater-function gotcha). |
+| Offline shell | App shell cached by Workbox; AI calls and GIF loading still require network. |
 
 ### 4.6 Progress Stats
 
@@ -364,6 +380,13 @@ Markers are embedded in Gemini's text response. App.jsx parses them with regex, 
 - **Effect:** Moves the workout in `trainiac_program` from `FromDay` to `ToDay`, increments `programVersion`
 - **Constraint:** `ToDay` must be a future day. Never today or past.
 
+#### `[PROFILE_UPDATE:name=VALUE|goal=VALUE|schedule=VALUE|duration=VALUE|equipment=VALUE|injuries=VALUE]`
+
+- **Format:** `[PROFILE_UPDATE:field=value|field=value|...]`
+- **Effect:** Merges specified fields into the stored member profile. Unspecified fields are left unchanged.
+- **Trigger:** Emitted by coach during onboarding as each answer is collected, replacing fragile position-based extraction. Also emitted mid-session if member updates preferences in chat.
+- **Fields:** `name`, `goal`, `schedule` (training days), `duration` (session length), `equipment`, `injuries`
+
 ### 7.2 Hidden Triggers (Not Shown in Chat)
 
 | Trigger | When Sent | Effect |
@@ -444,14 +467,16 @@ QuickReplies.jsx detects context from the last coach message (lowercase content 
 
 | Layer | Choice | Notes |
 |-------|--------|-------|
-| Framework | React 18 + Vite | PWA-ready with Vite plugin |
+| Framework | React 18 + Vite | PWA-ready with `vite-plugin-pwa` |
 | AI backend | Google Gemini 2.5 Flash | Called via `geminiChat(systemPrompt, messages)` in `gemini.js` |
 | Icons | Lucide React | No emojis anywhere in the UI |
-| Persistence | localStorage only | No backend, no authentication |
+| Persistence | localStorage only (v1.x) | Backend planned — see Backlog |
 | Styling | CSS custom properties | Wellhub brand tokens applied globally |
 | GIF assets | GymVisual.com CDN + local `/public/videos/*.gif` | Local files take priority |
 | Equipment data | `equipmentLookup.js` — `EQUIPMENT_MAP` | 80+ exercises mapped to equipment arrays |
 | GIF data | `videoLibrary.js` — `GIF_LIBRARY` | 80+ exercises mapped to GymVisual.com URLs |
+| PWA | `vite-plugin-pwa` + Workbox | `registerType: 'prompt'`; icons at 192 and 512 px; update banner in `main.jsx` |
+| Deployment | Vercel (source build) | `npx vercel --prod` for source builds; `npx vercel alias` to pin production domain |
 
 ### Brand Tokens
 
@@ -500,13 +525,26 @@ Features discussed and scoped but not yet built. Each item is a candidate for th
 
 | Item | Priority | Notes |
 |------|----------|-------|
+| Backend + user accounts (Supabase) | High | Stack chosen: Supabase (PostgreSQL + auth). Auth method: email + password. Schema designed (`profiles`, `workouts`, `programs` tables with RLS). Waiting on Supabase project creation + env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`). Unlocks cross-device sync and persistent history. |
+| Push notifications | Medium | Remind member of scheduled sessions. Needs Service Worker + Notification API. |
 | Smartwatch / fitness file sync | Medium | Import `.fit` / `.gpx` files (universal). Add Web Bluetooth for Android/Chrome as enhancement. iOS Apple Health requires native wrapper — longer term. |
 | Goal milestone tracking | Medium | "You're 60% to your strength goal" — requires progress calculation against onboarding goal |
-| Push notifications | Medium | Remind member of scheduled sessions. Needs Service Worker + Notification API. |
-| Backend + user accounts | Low | Currently localStorage only. Cross-device sync requires auth + database. |
 | Wellhub SSO integration | Low | Would tie Trainiac identity to the member's Wellhub account |
 | Partner gym check-in feed | Low | Check-ins from partner gyms feed into coaching context (e.g. "you went to gym but didn't log a session") |
 
 ---
 
-*This document reflects the v1.2 state of Trainiac AI Coach as of 2026-06-18. For questions about the AI coaching logic, see the system prompt in `buildSystemPrompt.js`. For component-level implementation details, see inline comments in the component files.*
+---
+
+## 12. Version History
+
+| Version | Date | Summary |
+|---------|------|---------|
+| V1.0 | 2026-06-17 | Initial deploy. 3-phase coaching flow, WorkoutCard, WeekProgram, WorkoutHistory (list + calendar), ProfileEditor, activity logging, rescheduling, superset support, rest timers, per-set weight tracking with progressive overload hints, drag-to-reorder. |
+| V1.1 | 2026-06-17 | Bug fixes: onboarding profile extraction replaced with `[PROFILE_UPDATE]` marker; missed-day logic in WeekProgram corrected (now checks `programCreatedBeforeDay`); "Message coach" link in WorkoutCard wired to `onAskCoach` prop; "Show me the plan" quick reply navigates to Progress tab instead of re-prompting AI. |
+| V1.2 | 2026-06-19 | PWA installability (manifest, icons, service worker); in-app "Update now" banner replacing manual SW unregister workflow; easter egg reset (7-tap version label); per-set skip (each set has its own skip button — exercise only marked skipped when all sets individually skipped); Trainiac logo system implemented (T-bolt monogram: dark navy bg, white crossbar, pink bolt); favicon updated to white bolt; Wellhub brand guidelines applied across all assets. |
+| V1.3 | 2026-06-22 | Workout progress bar (Trainiac Pink horizontal bar at bottom of WorkoutCard showing settled exercises / total, visible only during active workout); header logo updated to match favicon (dark navy bg, cream T-bolt, no CSS background wrapper); favicon bolt colour changed to white; logo cream-background variant added. |
+
+---
+
+*For questions about the AI coaching logic, see the system prompt in `buildSystemPrompt.js`. For component-level implementation details, see inline comments in the component files.*
